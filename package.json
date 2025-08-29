@@ -1,0 +1,15 @@
+{
+  "name": "synced-music-streaming-app",
+  "version": "1.0.0",
+  "description": "Real-time synchronized music streaming with Socket.io and yt-dlp",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "playlist": "python3 generate_playlist.py"
+  },
+  "dependencies": {
+    "express": "^4.18.0",
+    "socket.io": "^4.7.0"
+  }
+}
+

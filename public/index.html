@@ -46,6 +46,7 @@
 </div>
 </aside>
 <main class="content">
+<!-- Replace your existing hero section with this updated version -->
 <header class="hero">
 <div class="artwork">
 <i class="fa-solid fa-record-vinyl"></i>
@@ -53,26 +54,28 @@
 <div class="hero-meta">
 <div id="heroTitle" class="hero-title">No song</div>
 <div id="heroArtist" class="hero-artist">—</div>
-<!-- In your existing hero section, add this after the play button -->
-<div class="hero-play">
-  <button id="btnHeroPlay" class="hero-btn"><i class="fa-solid fa-play"></i></button>
-  <button id="btnKaraoke" class="hero-btn karaoke-btn"><i class="fa-solid fa-microphone"></i> Start Karaoke</button>
-</div>
-
-<!-- Add lyrics display area after the hero section -->
-<section class="karaoke-section" id="karaokeSection" style="display: none;">
-  <div class="lyrics-container">
-    <div class="lyrics-display" id="lyricsDisplay">
-      <p>Lyrics will appear here...</p>
-    </div>
-  </div>
-</section>
-
 </div>
 <div class="hero-play">
 <button id="btnHeroPlay" class="hero-btn"><i class="fa-solid fa-play"></i></button>
+<button id="btnKaraoke" class="hero-btn karaoke-btn"><i class="fa-solid fa-microphone"></i> Start Karaoke</button>
 </div>
 </header>
+
+<!-- Add this new karaoke section after the hero -->
+<section class="karaoke-section" id="karaokeSection" style="display: none;">
+<div class="karaoke-header">
+<h3><i class="fa-solid fa-microphone"></i> Karaoke Mode</h3>
+<button id="btnStopKaraoke" class="stop-karaoke-btn"><i class="fa-solid fa-times"></i></button>
+</div>
+<div class="lyrics-container">
+<div class="lyrics-display" id="lyricsDisplay">
+<div class="loading-lyrics">
+<i class="fa-solid fa-spinner fa-spin"></i>
+<p>Loading lyrics...</p>
+</div>
+</div>
+</div>
+</section>
 
 <!-- NEW SEARCH BOX SECTION -->
 <section class="main-search">

@@ -1,112 +1,128 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <title>InSync - Prototype</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <!-- Font: Inter -->
-  <link rel="preconnect" href="https://fonts.gstatic.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
-  <!-- Font Awesome -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-  <link rel="stylesheet" href="/style.css" />
+<meta charset="utf-8" />
+<title>InSync - Prototype</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<!-- Font: Inter -->
+<link rel="preconnect" href="https://fonts.gstatic.com/" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
+<!-- Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+<link rel="stylesheet" href="/style.css" />
 </head>
 <body>
-  <div id="app">
-    <aside class="sidebar">
-      <div class="brand">
-        <i class="fa-solid fa-music"></i>
-        <span>InSync</span>
-      </div>
+<div id="app">
+<aside class="sidebar">
+<div class="brand">
+<i class="fa-solid fa-music"></i>
+<span>InSync</span>
+</div>
+<div class="status">
+<div class="status-row">
+<span class="dot" id="connDot"></span><span id="connText">Disconnected</span>
+</div>
+<div class="status-row">
+<i class="fa-solid fa-users"></i><span id="userCount">0</span>
+</div>
+<div class="status-row">
+<i class="fa-solid fa-arrows-rotate"></i><span id="syncSkew">0 ms</span>
+</div>
+</div>
+<div class="controls">
+<button id="btnPrev" class="icon-btn"><i class="fa-solid fa-backward-step"></i></button>
+<button id="btnPlayPause" class="icon-btn primary"><i class="fa-solid fa-play"></i></button>
+<button id="btnNext" class="icon-btn"><i class="fa-solid fa-forward-step"></i></button>
+</div>
+<div class="download">
+<h3>Download</h3>
+<div class="search">
+<input id="searchInput" type="text" placeholder="Enter song name" autocomplete="off" />
+<button id="btnDownload" class="icon-btn"><i class="fa-solid fa-download"></i></button>
+</div>
+<ul id="suggestions"></ul>
+<div id="downloadList"></div>
+<button id="btnRefresh" class="refresh"><i class="fa-solid fa-rotate"></i> Refresh playlist</button>
+</div>
+</aside>
+<main class="content">
+<header class="hero">
+<div class="artwork">
+<i class="fa-solid fa-record-vinyl"></i>
+</div>
+<div class="hero-meta">
+<div id="heroTitle" class="hero-title">No song</div>
+<div id="heroArtist" class="hero-artist">—</div>
+<!-- In your existing hero section, add this after the play button -->
+<div class="hero-play">
+  <button id="btnHeroPlay" class="hero-btn"><i class="fa-solid fa-play"></i></button>
+  <button id="btnKaraoke" class="hero-btn karaoke-btn"><i class="fa-solid fa-microphone"></i> Start Karaoke</button>
+</div>
 
-      <div class="status">
-        <div class="status-row">
-          <span class="dot" id="connDot"></span><span id="connText">Disconnected</span>
-        </div>
-        <div class="status-row">
-          <i class="fa-solid fa-users"></i><span id="userCount">0</span>
-        </div>
-        <div class="status-row">
-          <i class="fa-solid fa-arrows-rotate"></i><span id="syncSkew">0 ms</span>
-        </div>
-      </div>
-
-      <div class="controls">
-        <button id="btnPrev" class="icon-btn"><i class="fa-solid fa-backward-step"></i></button>
-        <button id="btnPlayPause" class="icon-btn primary"><i class="fa-solid fa-play"></i></button>
-        <button id="btnNext" class="icon-btn"><i class="fa-solid fa-forward-step"></i></button>
-      </div>
-
-      <div class="download">
-        <h3>Download</h3>
-        <div class="search">
-          <input id="searchInput" type="text" placeholder="YouTube URL or search..." autocomplete="off" />
-          <button id="btnDownload" class="icon-btn"><i class="fa-solid fa-download"></i></button>
-        </div>
-        <ul id="suggestions"></ul>
-        <div id="downloadList"></div>
-        <button id="btnRefresh" class="refresh"><i class="fa-solid fa-rotate"></i> Refresh playlist</button>
-      </div>
-    </aside>
-
-    <main class="content">
-      <header class="hero">
-        <div class="artwork">
-          <i class="fa-solid fa-record-vinyl"></i>
-        </div>
-        <div class="hero-meta">
-          <div id="heroTitle" class="hero-title">No song</div>
-          <div id="heroArtist" class="hero-artist">—</div>
-        </div>
-        <div class="hero-play">
-          <button id="btnHeroPlay" class="hero-btn"><i class="fa-solid fa-play"></i></button>
-        </div>
-      </header>
-
-      <section class="playlist">
-        <div class="playlist-header">
-          <div>#</div><div>Title</div><div>Artist</div><div>Duration</div>
-        </div>
-        <div id="playlist" class="playlist-body"></div>
-      </section>
-    </main>
+<!-- Add lyrics display area after the hero section -->
+<section class="karaoke-section" id="karaokeSection" style="display: none;">
+  <div class="lyrics-container">
+    <div class="lyrics-display" id="lyricsDisplay">
+      <p>Lyrics will appear here...</p>
+    </div>
   </div>
+</section>
 
-  <footer class="player">
-    <div class="player-left">
-      <div class="track-info">
-        <div id="footTitle" class="foot-title">No song</div>
-        <div id="footArtist" class="foot-artist">—</div>
-      </div>
-    </div>
+</div>
+<div class="hero-play">
+<button id="btnHeroPlay" class="hero-btn"><i class="fa-solid fa-play"></i></button>
+</div>
+</header>
 
-    <div class="player-center">
-      <div class="player-controls">
-        <button id="footPrev" class="icon-btn"><i class="fa-solid fa-backward-step"></i></button>
-        <button id="footPlayPause" class="icon-btn primary"><i class="fa-solid fa-play"></i></button>
-        <button id="footNext" class="icon-btn"><i class="fa-solid fa-forward-step"></i></button>
-      </div>
-      <div class="progress">
-        <span id="curTime">0:00</span>
-        <div id="progressBar" class="bar">
-          <div id="progressFill" class="fill"></div>
-          <div id="progressHandle" class="handle"></div>
-        </div>
-        <span id="totTime">0:00</span>
-      </div>
-    </div>
+<!-- NEW SEARCH BOX SECTION -->
+<section class="main-search">
+<div class="main-search-box">
+<input id="mainSearchInput" type="text" placeholder="Search by artist or song name..." autocomplete="off" />
+<button id="btnMainSearch" class="search-btn"><i class="fa-solid fa-magnifying-glass"></i></button>
+</div>
+</section>
 
-    <div class="player-right">
-      <i class="fa-solid fa-volume-high"></i>
-      <input id="volume" type="range" min="0" max="1" step="0.01" value="1" />
-      <button id="btnShuffle" class="icon-btn"><i class="fa-solid fa-shuffle"></i></button>
-      <button id="btnRepeat" class="icon-btn"><i class="fa-solid fa-repeat"></i></button>
-    </div>
-  </footer>
-
-  <audio id="audio"></audio>
-  <script src="/socket.io/socket.io.js"></script>
-  <script src="/script.js"></script>
+<section class="playlist">
+<div class="playlist-header">
+<div>#</div><div>Title</div><div>Artist</div><div>Duration</div>
+</div>
+<div id="playlist" class="playlist-body"></div>
+</section>
+</main>
+</div>
+<footer class="player">
+<div class="player-left">
+<div class="track-info">
+<div id="footTitle" class="foot-title">No song</div>
+<div id="footArtist" class="foot-artist">—</div>
+</div>
+</div>
+<div class="player-center">
+<div class="player-controls">
+<button id="footPrev" class="icon-btn"><i class="fa-solid fa-backward-step"></i></button>
+<button id="footPlayPause" class="icon-btn primary"><i class="fa-solid fa-play"></i></button>
+<button id="footNext" class="icon-btn"><i class="fa-solid fa-forward-step"></i></button>
+</div>
+<div class="progress">
+<span id="curTime">0:00</span>
+<div id="progressBar" class="bar">
+<div id="progressFill" class="fill"></div>
+<div id="progressHandle" class="handle"></div>
+</div>
+<span id="totTime">0:00</span>
+</div>
+</div>
+<div class="player-right">
+<i class="fa-solid fa-volume-high"></i>
+<input id="volume" type="range" min="0" max="1" step="0.01" value="1" />
+<button id="btnShuffle" class="icon-btn"><i class="fa-solid fa-shuffle"></i></button>
+<button id="btnRepeat" class="icon-btn"><i class="fa-solid fa-repeat"></i></button>
+</div>
+</footer>
+<audio id="audio"></audio>
+<script src="https://cdn.jsdelivr.net/npm/nosleep.js@0.12.0/dist/NoSleep.min.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script src="/script.js"></script>
 </body>
 </html>
 

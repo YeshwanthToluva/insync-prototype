@@ -2,6 +2,79 @@
 // Frontend synchronization logic using Socket.io, custom audio controls and downloads UI.
 
 const audio = document.getElementById('audio');
+// Wake Lock / NoSleep integration
+let wakeLock = null;
+let noSleep = null;
+let keepAwakeEnabled = true; // default ON; expose a toggle button if desired
+
+async function requestWakeLock() {
+  try {
+    if ('wakeLock' in navigator) {
+      wakeLock = await navigator.wakeLock.request('screen');
+      wakeLock.addEventListener('release', () => {
+        // Try to re-acquire if still enabled and page visible
+        if (keepAwakeEnabled && document.visibilityState === 'visible') {
+          requestWakeLock().catch(() => {});
+        }
+      });
+    } else {
+      // Fallback to NoSleep
+      if (!noSleep) noSleep = new NoSleep();
+      noSleep.enable(); // requires prior user interaction
+    }
+  } catch (err) {
+    // On some mobiles, requests can fail due to battery/power-saving
+    // Fallback to NoSleep if available
+    try {
+      if (!noSleep) noSleep = new NoSleep();
+      noSleep.enable();
+    } catch (e) {}
+  }
+}
+
+function releaseWakeLock() {
+  if (wakeLock) {
+    wakeLock.release().catch(() => {}).finally(() => { wakeLock = null; });
+  }
+  if (noSleep) {
+    try { noSleep.disable(); } catch (e) {}
+  }
+}
+
+// Reacquire when tab becomes visible again
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && keepAwakeEnabled) {
+    requestWakeLock().catch(() => {});
+  }
+});
+
+// Tie to playback
+audio.addEventListener('play', () => { if (keepAwakeEnabled) requestWakeLock(); });
+audio.addEventListener('pause', () => { releaseWakeLock(); });
+audio.addEventListener('ended', () => { /* server advances; keep lock if still playing next */ });
+
+// Optional: expose a toggle button
+// Example: <button id="btnAwake" class="icon-btn"><i class="fa-solid fa-moon"></i></button>
+const btnAwake = document.createElement('button');
+btnAwake.id = 'btnAwake';
+btnAwake.className = 'icon-btn';
+btnAwake.innerHTML = '<i class="fa-solid fa-eye"></i>';
+document.querySelector('.player-right').prepend(btnAwake);
+
+function updateAwakeIcon() {
+  btnAwake.style.opacity = keepAwakeEnabled ? '1' : '0.5';
+}
+btnAwake.addEventListener('click', async () => {
+  keepAwakeEnabled = !keepAwakeEnabled;
+  updateAwakeIcon();
+  if (keepAwakeEnabled && !audio.paused) {
+    await requestWakeLock().catch(() => {});
+  } else {
+    releaseWakeLock();
+  }
+});
+updateAwakeIcon();
+
 const socket = io();
 
 // DOM references
@@ -342,7 +415,51 @@ searchInput.addEventListener('input', () => {
     suggestions.appendChild(li);
   });
 });
+// Add this to your script.js file
 
-// Initial load
+// Real-time search functionality
+document.getElementById('mainSearchInput').addEventListener('input', function(e) {
+    const searchQuery = e.target.value.toLowerCase().trim();
+    
+    // Get all playlist rows
+    const playlistRows = document.querySelectorAll('#playlist .playlist-row');
+    
+    // If search is empty, show all songs
+    if (searchQuery === '') {
+        playlistRows.forEach(row => {
+            row.style.display = 'grid';
+        });
+        return;
+    }
+    
+    // Filter songs in real-time
+    playlistRows.forEach(row => {
+        const titleElement = row.children[1]; // Title column
+        const artistElement = row.children[2]; // Artist column
+        
+        const title = titleElement.textContent.toLowerCase();
+        const artist = artistElement.textContent.toLowerCase();
+        
+        // Check if search query matches title or artist
+        if (title.includes(searchQuery) || artist.includes(searchQuery)) {
+            row.style.display = 'grid'; // Show matching song
+        } else {
+            row.style.display = 'none'; // Hide non-matching song
+        }
+    });
+});
+
+// Optional: Clear search when clicking outside or pressing Escape
+document.getElementById('mainSearchInput').addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        e.target.value = '';
+        // Show all songs again
+        document.querySelectorAll('#playlist .playlist-row').forEach(row => {
+            row.style.display = 'grid';
+        });
+    }
+});
+
+
 fetchPlaylist();
 

@@ -1,401 +1,758 @@
 [
   {
     "id": 1,
+    "title": "Katchi Sera (Music Video) ｜ Samyuktha ｜ Ken Royson ｜ Think Indie",
+    "artist": "@SaiAbhyankkar",
+    "filename": "@SaiAbhyankkar - Katchi Sera (Music Video) ｜ Samyuktha ｜ Ken Royson ｜ Think Indie.mp3",
+    "duration": 184.872
+  },
+  {
+    "id": 2,
     "title": "Gimme! Gimme! Gimme! (A Man After Midnight)",
     "artist": "ABBA",
     "filename": "ABBA - Gimme! Gimme! Gimme! (A Man After Midnight).mp3",
     "duration": 196.41469387755103
   },
   {
-    "id": 2,
+    "id": 3,
+    "title": "Safe In New York City (Official HD Video)",
+    "artist": "AC⧸DC",
+    "filename": "AC⧸DC - Safe In New York City (Official HD Video).mp3",
+    "duration": 239.856
+  },
+  {
+    "id": 4,
+    "title": "Faded",
+    "artist": "Alan Walker",
+    "filename": "Alan Walker - Faded.mp3",
+    "duration": 212.52
+  },
+  {
+    "id": 5,
+    "title": "Lonely Together ft. Rita Ora",
+    "artist": "Avicii",
+    "filename": "Avicii - Lonely Together ft. Rita Ora.mp3",
+    "duration": 184.344
+  },
+  {
+    "id": 6,
+    "title": "DJ Waley Babu ｜ feat Aastha Gill ｜ Party Anthem ｜ DJ Wale Babu",
+    "artist": "Badshah",
+    "filename": "Badshah - DJ Waley Babu ｜ feat Aastha Gill ｜ Party Anthem ｜ DJ Wale Babu.mp3",
+    "duration": 155.66367346938776
+  },
+  {
+    "id": 7,
+    "title": "Beautiful Liar",
+    "artist": "Beyoncé, Shakira",
+    "filename": "Beyoncé, Shakira - Beautiful Liar.mp3",
+    "duration": 208.08
+  },
+  {
+    "id": 8,
+    "title": "Just The Two Of Us  (official video)",
+    "artist": "Bill Withers",
+    "filename": "Bill Withers - Just The Two Of Us  (official video).mp3",
+    "duration": 197.87755102040816
+  },
+  {
+    "id": 9,
     "title": "LUNCH (Official Lyric Video)",
     "artist": "Billie Eilish",
     "filename": "Billie Eilish - LUNCH (Official Lyric Video).mp3",
     "duration": 179.712
   },
   {
-    "id": 3,
+    "id": 10,
+    "title": "you should see me in a crown (Vertical Video)",
+    "artist": "Billie Eilish",
+    "filename": "Billie Eilish - you should see me in a crown (Vertical Video).mp3",
+    "duration": 180.696
+  },
+  {
+    "id": 11,
     "title": "Break Up Video Song ( Telisiney Na Nuvvey) ｜ Arjun Reddy Video Songs ｜ Vijay Deverakonda ｜ Shalini",
     "artist": "Unknown",
     "filename": "Break Up Video Song ( Telisiney Na Nuvvey) ｜ Arjun Reddy Video Songs ｜ Vijay Deverakonda ｜ Shalini.mp3",
     "duration": 388.824
   },
   {
-    "id": 4,
+    "id": 12,
     "title": "Gimme More (Lyrics)",
     "artist": "Britney Spears",
     "filename": "Britney Spears - Gimme More (Lyrics).mp3",
     "duration": 249.12979591836734
   },
   {
-    "id": 5,
+    "id": 13,
     "title": "Gimme More (Official HD Video)",
     "artist": "Britney Spears",
     "filename": "Britney Spears - Gimme More (Official HD Video).mp3",
     "duration": 241.032
   },
   {
-    "id": 6,
+    "id": 14,
+    "title": "Toxic (Official HD Video)",
+    "artist": "Britney Spears",
+    "filename": "Britney Spears - Toxic (Official HD Video).mp3",
+    "duration": 211.68
+  },
+  {
+    "id": 15,
     "title": "Count on Me (Official Lyric Video)",
     "artist": "Bruno Mars",
     "filename": "Bruno Mars - Count on Me (Official Lyric Video).mp3",
     "duration": 192.936
   },
   {
-    "id": 7,
+    "id": 16,
+    "title": "That’s What I Like [Official Music Video]",
+    "artist": "Bruno Mars",
+    "filename": "Bruno Mars - That’s What I Like [Official Music Video].mp3",
+    "duration": 210.768
+  },
+  {
+    "id": 17,
+    "title": "How Deep Is Your Love",
+    "artist": "Calvin Harris & Disciples",
+    "filename": "Calvin Harris & Disciples - How Deep Is Your Love.mp3",
+    "duration": 260.57142857142856
+  },
+  {
+    "id": 18,
+    "title": "Havana (Audio) ft. Young Thug",
+    "artist": "Camila Cabello",
+    "filename": "Camila Cabello - Havana (Audio) ft. Young Thug.mp3",
+    "duration": 218.544
+  },
+  {
+    "id": 19,
+    "title": "Liar (Audio)",
+    "artist": "Camila Cabello",
+    "filename": "Camila Cabello - Liar (Audio).mp3",
+    "duration": 208.584
+  },
+  {
+    "id": 20,
+    "title": "Liar",
+    "artist": "Camila Cabello",
+    "filename": "Camila Cabello - Liar.mp3",
+    "duration": 361.44
+  },
+  {
+    "id": 21,
+    "title": "Shameless (Official Video)",
+    "artist": "Camila Cabello",
+    "filename": "Camila Cabello - Shameless (Official Video).mp3",
+    "duration": 226.368
+  },
+  {
+    "id": 22,
     "title": "Attention [Official Video]",
     "artist": "Charlie Puth",
     "filename": "Charlie Puth - Attention [Official Video].mp3",
     "duration": 231.816
   },
   {
-    "id": 8,
+    "id": 23,
+    "title": "Light Switch [Official Music Video]",
+    "artist": "Charlie Puth",
+    "filename": "Charlie Puth - Light Switch [Official Music Video].mp3",
+    "duration": 204.66938775510204
+  },
+  {
+    "id": 24,
+    "title": "Marvin Gaye ft. Meghan Trainor [Official Video]",
+    "artist": "Charlie Puth",
+    "filename": "Charlie Puth - Marvin Gaye ft. Meghan Trainor [Official Video].mp3",
+    "duration": 208.968
+  },
+  {
+    "id": 25,
+    "title": "That's Hilarious [Official Video]",
+    "artist": "Charlie Puth",
+    "filename": "Charlie Puth - That's Hilarious [Official Video].mp3",
+    "duration": 145.944
+  },
+  {
+    "id": 26,
+    "title": "Cool for the Summer",
+    "artist": "Unknown",
+    "filename": "Cool for the Summer.mp3",
+    "duration": 214.776
+  },
+  {
+    "id": 27,
+    "title": "Crazy Kiya Re ..( Lyrics ) Sunidhi Chauhan ｜ Pritam ｜ Sameer ｜  @onlyjubinnautiyal2930",
+    "artist": "Unknown",
+    "filename": "Crazy Kiya Re ..( Lyrics ) Sunidhi Chauhan ｜ Pritam ｜ Sameer ｜  @onlyjubinnautiyal2930.mp3",
+    "duration": 291.48
+  },
+  {
+    "id": 28,
+    "title": "Crazy Kiya Re ｜ Full Song ｜ Dhoom：2 ｜ Aishwarya Rai, Hrithik Roshan, Sunidhi Chauhan, Pritam, Sameer",
+    "artist": "Unknown",
+    "filename": "Crazy Kiya Re ｜ Full Song ｜ Dhoom：2 ｜ Aishwarya Rai, Hrithik Roshan, Sunidhi Chauhan, Pritam, Sameer.mp3",
+    "duration": 304.48326530612246
+  },
+  {
+    "id": 29,
     "title": "Dabidi Dibidi Full Video Song ｜ Daaku Maharaaj ｜ NBK, Urvashi Rautela ｜ Bobby Kolli ｜ Thaman S",
     "artist": "Unknown",
     "filename": "Dabidi Dibidi Full Video Song ｜ Daaku Maharaaj ｜ NBK, Urvashi Rautela ｜ Bobby Kolli ｜ Thaman S.mp3",
     "duration": 256.8
   },
   {
-    "id": 9,
+    "id": 30,
     "title": "Get Lucky (Official Audio) ft. Pharrell Williams, Nile Rodgers",
     "artist": "Daft Punk",
     "filename": "Daft Punk - Get Lucky (Official Audio) ft. Pharrell Williams, Nile Rodgers.mp3",
     "duration": 248.664
   },
   {
-    "id": 10,
+    "id": 31,
+    "title": "Dilbara ｜ Full Song ｜ Dhoom ｜ Abhishek Bachchan, Uday, Esha ｜ Abhijeet, Sowmya ｜ Pritam, Sameer",
+    "artist": "Unknown",
+    "filename": "Dilbara ｜ Full Song ｜ Dhoom ｜ Abhishek Bachchan, Uday, Esha ｜ Abhijeet, Sowmya ｜ Pritam, Sameer.mp3",
+    "duration": 275.376
+  },
+  {
+    "id": 32,
+    "title": "Done for Me (feat. Kehlani)",
+    "artist": "Unknown",
+    "filename": "Done for Me (feat. Kehlani).mp3",
+    "duration": 180.528
+  },
+  {
+    "id": 33,
     "title": "Drive (From F1® The Movie) [Official Music Video]",
     "artist": "Ed Sheeran",
     "filename": "Ed Sheeran - Drive (From F1® The Movie) [Official Music Video].mp3",
     "duration": 189.54448979591837
   },
   {
-    "id": 11,
+    "id": 34,
     "title": "Without Me (Official Music Video)",
     "artist": "Eminem",
     "filename": "Eminem - Without Me (Official Music Video).mp3",
     "duration": 297.66530612244895
   },
   {
-    "id": 12,
+    "id": 35,
     "title": "Emitemitemito Video Song ｜ Arjun Reddy Video Songs ｜ Vijay Deverakonda ｜ Shalini",
     "artist": "Unknown",
     "filename": "Emitemitemito Video Song ｜ Arjun Reddy Video Songs ｜ Vijay Deverakonda ｜ Shalini.mp3",
     "duration": 252.4734693877551
   },
   {
-    "id": 13,
+    "id": 36,
     "title": "Gimme More",
     "artist": "Unknown",
     "filename": "Gimme More.mp3",
     "duration": 251.32408163265305
   },
   {
-    "id": 14,
+    "id": 37,
     "title": "SIRRA ( Official Video )",
     "artist": "Guru Randhawa",
     "filename": "Guru Randhawa - SIRRA ( Official Video ).mp3",
     "duration": 153.648
   },
   {
-    "id": 15,
+    "id": 38,
     "title": "Flight (Man of Steel)",
     "artist": "Hans Zimmer",
     "filename": "Hans Zimmer - Flight (Man of Steel).mp3",
     "duration": 253.93632653061223
   },
   {
-    "id": 16,
+    "id": 39,
+    "title": "Hanumankind – Big Dawgs ｜ Prod. Kalmi (Official Music Video) ｜ Def Jam India",
+    "artist": "Hanumankind, Kalmi",
+    "filename": "Hanumankind, Kalmi - Hanumankind – Big Dawgs ｜ Prod. Kalmi (Official Music Video) ｜ Def Jam India.mp3",
+    "duration": 234.71020408163264
+  },
+  {
+    "id": 40,
+    "title": "Inkem Inkem Full Video Song ｜ Vijay Devarakonda, Rashmika Mandanna ｜ Geetha Govindam ｜ Sid Sriram",
+    "artist": "Unknown",
+    "filename": "Inkem Inkem Full Video Song ｜ Vijay Devarakonda, Rashmika Mandanna ｜ Geetha Govindam ｜ Sid Sriram.mp3",
+    "duration": 256.68
+  },
+  {
+    "id": 41,
+    "title": "Favorite (Official Video)",
+    "artist": "Isabel LaRosa",
+    "filename": "Isabel LaRosa - Favorite (Official Video).mp3",
+    "duration": 135.84
+  },
+  {
+    "id": 42,
     "title": "Sunday Crossword (Official Lyric Video)",
     "artist": "Janani K. Jha",
     "filename": "Janani K. Jha - Sunday Crossword (Official Lyric Video).mp3",
     "duration": 189.24
   },
   {
-    "id": 17,
+    "id": 43,
+    "title": "Dance Again (Lyric Video) ft. Pitbull",
+    "artist": "Jennifer Lopez",
+    "filename": "Jennifer Lopez - Dance Again (Lyric Video) ft. Pitbull.mp3",
+    "duration": 236.976
+  },
+  {
+    "id": 44,
     "title": "Baby ft. Ludacris",
     "artist": "Justin Bieber",
     "filename": "Justin Bieber - Baby ft. Ludacris.mp3",
     "duration": 219.072
   },
   {
-    "id": 18,
+    "id": 45,
     "title": "Sorry (PURPOSE ： The Movement)",
     "artist": "Justin Bieber",
     "filename": "Justin Bieber - Sorry (PURPOSE ： The Movement).mp3",
     "duration": 205.152
   },
   {
-    "id": 19,
+    "id": 46,
     "title": "Kanulanu Thaake Full Video Song ｜｜ Manam Video Songs  ｜｜ Naga Chaitanya,Samantha",
     "artist": "Unknown",
     "filename": "Kanulanu Thaake Full Video Song ｜｜ Manam Video Songs  ｜｜ Naga Chaitanya,Samantha.mp3",
     "duration": 237.792
   },
   {
-    "id": 20,
+    "id": 47,
     "title": "Naayak Songs - Ram Charan, Kajal, Amala Paul",
     "artist": "Kathi Lanti Pilla Full Song With Lyrics",
     "filename": "Kathi Lanti Pilla Full Song With Lyrics - Naayak Songs - Ram Charan, Kajal, Amala Paul.mp3",
     "duration": 251.64
   },
   {
-    "id": 21,
+    "id": 48,
     "title": "Harleys in Hawaii Cover by Lakshmi Meghana",
     "artist": "Katy Perry",
     "filename": "Katy Perry - Harleys in Hawaii Cover by Lakshmi Meghana.mp3",
     "duration": 118.8
   },
   {
-    "id": 22,
+    "id": 49,
     "title": "I Kissed A Girl (Official Music Video)",
     "artist": "Katy Perry",
     "filename": "Katy Perry - I Kissed A Girl (Official Music Video).mp3",
     "duration": 184.42448979591836
   },
   {
-    "id": 23,
+    "id": 50,
     "title": "Despacito (Audio) ft. Justin Bieber",
     "artist": "Luis Fonsi, Daddy Yankee",
     "filename": "Luis Fonsi, Daddy Yankee - Despacito (Audio) ft. Justin Bieber.mp3",
     "duration": 228.98938775510203
   },
   {
-    "id": 24,
+    "id": 51,
+    "title": "Rowdy Baby (Video Song) ｜ Dhanush, Sai Pallavi ｜ Yuvan Shankar Raja ｜ Balaji Mohan",
+    "artist": "Maari 2",
+    "filename": "Maari 2 - Rowdy Baby (Video Song) ｜ Dhanush, Sai Pallavi ｜ Yuvan Shankar Raja ｜ Balaji Mohan.mp3",
+    "duration": 283.248
+  },
+  {
+    "id": 52,
+    "title": "Rowdy Baby (Video Song) ｜ Dhanush,Sai Pallavi ｜ Yuvan Shankar Raja ｜ Balaji Mohan",
+    "artist": "Maari 2 [Telugu]",
+    "filename": "Maari 2 [Telugu] - Rowdy Baby (Video Song) ｜ Dhanush,Sai Pallavi ｜ Yuvan Shankar Raja ｜ Balaji Mohan.mp3",
+    "duration": 281.352
+  },
+  {
+    "id": 53,
     "title": "Uptown Funk (Official Video) ft. Bruno Mars",
     "artist": "Mark Ronson",
     "filename": "Mark Ronson - Uptown Funk (Official Video) ft. Bruno Mars.mp3",
     "duration": 270.432
   },
   {
-    "id": 25,
+    "id": 54,
+    "title": "In The Name Of Love (Official Video)",
+    "artist": "Martin Garrix & Bebe Rexha",
+    "filename": "Martin Garrix & Bebe Rexha - In The Name Of Love (Official Video).mp3",
+    "duration": 205.08
+  },
+  {
+    "id": 55,
+    "title": "Billie Jean (Official Video)",
+    "artist": "Michael Jackson",
+    "filename": "Michael Jackson - Billie Jean (Official Video).mp3",
+    "duration": 295.872
+  },
+  {
+    "id": 56,
     "title": "Lyric Video｜ COOLIE ｜ Superstar Rajinikanth ｜ Sun Pictures ｜ Lokesh ｜ Anirudh ｜ Pooja Hegde",
     "artist": "Monica",
     "filename": "Monica - Lyric Video｜ COOLIE ｜ Superstar Rajinikanth ｜ Sun Pictures ｜ Lokesh ｜ Anirudh ｜ Pooja Hegde.mp3",
     "duration": 214.465306122449
   },
   {
-    "id": 26,
+    "id": 57,
     "title": "Nice To Meet You (Official Video)",
     "artist": "Myles Smith",
     "filename": "Myles Smith - Nice To Meet You (Official Video).mp3",
     "duration": 206.96816326530612
   },
   {
-    "id": 27,
+    "id": 58,
     "title": "Paro (Lyrics)",
     "artist": "NEJ'",
     "filename": "NEJ' - Paro (Lyrics).mp3",
     "duration": 202.872
   },
   {
-    "id": 28,
+    "id": 59,
+    "title": "Na Roja Nuvve ｜ Kushi ｜ Vijay Deverakonda ｜ Samantha Ruth Prabhu ｜ Hesham Abdul Wahab ｜ Lyrical",
+    "artist": "Unknown",
+    "filename": "Na Roja Nuvve ｜ Kushi ｜ Vijay Deverakonda ｜ Samantha Ruth Prabhu ｜ Hesham Abdul Wahab ｜ Lyrical.mp3",
+    "duration": 253.368
+  },
+  {
+    "id": 60,
     "title": "Nice To Meet Ya (Official Video)",
     "artist": "Niall Horan",
     "filename": "Niall Horan - Nice To Meet Ya (Official Video).mp3",
     "duration": 197.088
   },
   {
-    "id": 29,
+    "id": 61,
     "title": "No Judgement (Official Video)",
     "artist": "Niall Horan",
     "filename": "Niall Horan - No Judgement (Official Video).mp3",
     "duration": 188.016
   },
   {
-    "id": 30,
+    "id": 62,
     "title": "GANGNAM STYLE(강남스타일) M⧸V",
     "artist": "PSY",
     "filename": "PSY - GANGNAM STYLE(강남스타일) M⧸V.mp3",
     "duration": 252.24
   },
   {
-    "id": 31,
+    "id": 63,
     "title": "@adityarikhari  UNPLG'd",
     "artist": "Paro",
     "filename": "Paro - @adityarikhari  UNPLG'd.mp3",
     "duration": 70.4
   },
   {
-    "id": 32,
+    "id": 64,
+    "title": "Official Lyric Video ｜ Coolie ｜ Superstar Rajinikanth ｜ Sun Pictures ｜ Lokesh ｜ Anirudh",
+    "artist": "Powerhouse",
+    "filename": "Powerhouse - Official Lyric Video ｜ Coolie ｜ Superstar Rajinikanth ｜ Sun Pictures ｜ Lokesh ｜ Anirudh.mp3",
+    "duration": 208.968
+  },
+  {
+    "id": 65,
     "title": "APT. (Official Music Video)",
     "artist": "ROSÉ & Bruno Mars",
     "filename": "ROSÉ & Bruno Mars - APT. (Official Music Video).mp3",
     "duration": 173.424
   },
   {
-    "id": 33,
+    "id": 66,
+    "title": "Line Without a Hook (Official Lyric Video)",
+    "artist": "Ricky Montgomery",
+    "filename": "Ricky Montgomery - Line Without a Hook (Official Lyric Video).mp3",
+    "duration": 249.67836734693878
+  },
+  {
+    "id": 67,
+    "title": "S&M Remix (Audio) ft. Britney Spears",
+    "artist": "Rihanna",
+    "filename": "Rihanna - S&M Remix (Audio) ft. Britney Spears.mp3",
+    "duration": 265.992
+  },
+  {
+    "id": 68,
     "title": "Rudhira Magadha BGM ｜ Mirai ｜ Teja Sajja ｜GowraHari｜ Sai Charan｜Karthik Gattamneni｜TG Vishwa Prasad",
     "artist": "Unknown",
     "filename": "Rudhira Magadha BGM ｜ Mirai ｜ Teja Sajja ｜GowraHari｜ Sai Charan｜Karthik Gattamneni｜TG Vishwa Prasad.mp3",
     "duration": 58.392
   },
   {
-    "id": 34,
+    "id": 69,
+    "title": "Dandelions (Lyrics)",
+    "artist": "Ruth B.",
+    "filename": "Ruth B. - Dandelions (Lyrics).mp3",
+    "duration": 228.864
+  },
+  {
+    "id": 70,
     "title": "ALIBI FT. PABLLO VITTAR & YSEULT (OFFICIAL MUSIC VIDEO)",
     "artist": "SEVDALIZA",
     "filename": "SEVDALIZA - ALIBI FT. PABLLO VITTAR & YSEULT (OFFICIAL MUSIC VIDEO).mp3",
     "duration": 193.416
   },
   {
-    "id": 35,
+    "id": 71,
     "title": "Sahiba (Official Music Video) ： Aditya Rikhari, Ankita Chhetri ｜ T-Series",
     "artist": "Unknown",
     "filename": "Sahiba (Official Music Video) ： Aditya Rikhari, Ankita Chhetri ｜ T-Series.mp3",
     "duration": 183.072
   },
   {
-    "id": 36,
+    "id": 72,
     "title": "Saiyaara Title Song ｜ Ahaan Panday, Aneet Padda ｜ Tanishk Bagchi, Faheem A, Arslan N ｜ Irshad Kamil",
     "artist": "Unknown",
     "filename": "Saiyaara Title Song ｜ Ahaan Panday, Aneet Padda ｜ Tanishk Bagchi, Faheem A, Arslan N ｜ Irshad Kamil.mp3",
     "duration": 248.04
   },
   {
-    "id": 37,
+    "id": 73,
+    "title": "Swan Song (Official Audio) ｜ Shang-Chi： The Album",
+    "artist": "Saweetie & NIKI",
+    "filename": "Saweetie & NIKI - Swan Song (Official Audio) ｜ Shang-Chi： The Album.mp3",
+    "duration": 165.888
+  },
+  {
+    "id": 74,
+    "title": "Say My Name (feat. Zyra) (Jai Wolf Remix)",
+    "artist": "Unknown",
+    "filename": "Say My Name (feat. Zyra) (Jai Wolf Remix).mp3",
+    "duration": 285.07428571428574
+  },
+  {
+    "id": 75,
+    "title": "Love You Like A Love Song",
+    "artist": "Selena Gomez & The Scene",
+    "filename": "Selena Gomez & The Scene - Love You Like A Love Song.mp3",
+    "duration": 220.248
+  },
+  {
+    "id": 76,
+    "title": "Dance Again (Official Lyrics)",
+    "artist": "Selena Gomez",
+    "filename": "Selena Gomez - Dance Again (Official Lyrics).mp3",
+    "duration": 171.5722448979592
+  },
+  {
+    "id": 77,
     "title": "Feel Me (Lyric Video)",
     "artist": "Selena Gomez",
     "filename": "Selena Gomez - Feel Me (Lyric Video).mp3",
     "duration": 225.216
   },
   {
-    "id": 38,
+    "id": 78,
     "title": "Ride Or Die Pt. 2 Ft. Tokischa & Villano Antillano (Letra⧸Lyrics)",
     "artist": "Sevdaliza",
     "filename": "Sevdaliza - Ride Or Die Pt. 2 Ft. Tokischa & Villano Antillano (Letra⧸Lyrics).mp3",
     "duration": 159.0
   },
   {
-    "id": 39,
+    "id": 79,
     "title": "Hot Girls (Lyrics)",
     "artist": "Shuba",
     "filename": "Shuba - Hot Girls (Lyrics).mp3",
     "duration": 176.352
   },
   {
-    "id": 40,
+    "id": 80,
+    "title": "Cheap Thrills (Official Audio)",
+    "artist": "Sia",
+    "filename": "Sia - Cheap Thrills (Official Audio).mp3",
+    "duration": 212.97632653061225
+  },
+  {
+    "id": 81,
+    "title": "Sir Osthara Telugu Full Video Song Full Hd ｜ @ManaChitraalu",
+    "artist": "Unknown",
+    "filename": "Sir Osthara Telugu Full Video Song Full Hd ｜ @ManaChitraalu.mp3",
+    "duration": 234.216
+  },
+  {
+    "id": 82,
+    "title": "Businessman - Mahesh Babu, Kajal Aggarwal, Puri Jagannadh",
+    "artist": "Sir Osthara Telugu Song Lyrics",
+    "filename": "Sir Osthara Telugu Song Lyrics - Businessman - Mahesh Babu, Kajal Aggarwal, Puri Jagannadh.mp3",
+    "duration": 251.952
+  },
+  {
+    "id": 83,
+    "title": "＂Where Are Ü Now＂ with Justin Bieber (Official Video)",
+    "artist": "Skrillex and Diplo",
+    "filename": "Skrillex and Diplo - ＂Where Are Ü Now＂ with Justin Bieber (Official Video).mp3",
+    "duration": 251.352
+  },
+  {
+    "id": 84,
     "title": "Tamma Tamma Again ｜ Varun , Alia ｜ Bappi L, Anuradha P ｜ Tanishk, Badshah ｜  ＂Badrinath Ki Dulhania＂",
     "artist": "Unknown",
     "filename": "Tamma Tamma Again ｜ Varun , Alia ｜ Bappi L, Anuradha P ｜ Tanishk, Badshah ｜  ＂Badrinath Ki Dulhania＂.mp3",
     "duration": 176.496
   },
   {
-    "id": 41,
+    "id": 85,
+    "title": "greedy (Official Video)",
+    "artist": "Tate McRae",
+    "filename": "Tate McRae - greedy (Official Video).mp3",
+    "duration": 154.176
+  },
+  {
+    "id": 86,
+    "title": "Blank Space",
+    "artist": "Taylor Swift",
+    "filename": "Taylor Swift - Blank Space.mp3",
+    "duration": 272.5355102040816
+  },
+  {
+    "id": 87,
     "title": "Look What You Made Me Do",
     "artist": "Taylor Swift",
     "filename": "Taylor Swift - Look What You Made Me Do.mp3",
     "duration": 255.6342857142857
   },
   {
-    "id": 42,
+    "id": 88,
     "title": "No One Noticed (Visualizer)",
     "artist": "The Marías",
     "filename": "The Marías - No One Noticed (Visualizer).mp3",
     "duration": 235.08
   },
   {
-    "id": 43,
+    "id": 89,
     "title": "I Found A Girl ft. OMI",
     "artist": "The Vamps",
     "filename": "The Vamps - I Found A Girl ft. OMI.mp3",
     "duration": 192.768
   },
   {
-    "id": 44,
+    "id": 90,
+    "title": "The Hills",
+    "artist": "The Weeknd",
+    "filename": "The Weeknd - The Hills.mp3",
+    "duration": 234.216
+  },
+  {
+    "id": 91,
+    "title": "Die For You (Remix ⧸ Lyric Video)",
+    "artist": "The Weeknd, Ariana Grande",
+    "filename": "The Weeknd, Ariana Grande - Die For You (Remix ⧸ Lyric Video).mp3",
+    "duration": 232.968
+  },
+  {
+    "id": 92,
     "title": "One Of The Girls (Official Audio)",
     "artist": "The Weeknd, JENNIE & Lily Rose Depp",
     "filename": "The Weeknd, JENNIE & Lily Rose Depp - One Of The Girls (Official Audio).mp3",
     "duration": 244.728
   },
   {
-    "id": 45,
+    "id": 93,
     "title": "Firestorm Lyric Video ｜ Pawan Kalyan ｜ Sujeeth ｜ Thaman S ｜ DVV Danayya",
     "artist": "They Call Him OG",
     "filename": "They Call Him OG - Firestorm Lyric Video ｜ Pawan Kalyan ｜ Sujeeth ｜ Thaman S ｜ DVV Danayya.mp3",
     "duration": 245.904
   },
   {
-    "id": 46,
+    "id": 94,
     "title": "PUSH 2 START (Lyrics)",
     "artist": "Tyla",
     "filename": "Tyla - PUSH 2 START (Lyrics).mp3",
     "duration": 155.376
   },
   {
-    "id": 47,
+    "id": 95,
     "title": "Water (Official Music Video)",
     "artist": "Tyla",
     "filename": "Tyla - Water (Official Music Video).mp3",
     "duration": 219.264
   },
   {
-    "id": 48,
+    "id": 96,
     "title": "Pritt",
     "artist": "Unakkul Naane",
     "filename": "Unakkul Naane - Pritt.mp3",
     "duration": 128.04
   },
   {
-    "id": 49,
+    "id": 97,
     "title": "VOLKSWAGEN FUNK",
     "artist": "Unknown",
     "filename": "VOLKSWAGEN FUNK.mp3",
     "duration": 92.424
   },
   {
-    "id": 50,
+    "id": 98,
     "title": "Vellipomaake Full Video Song ｜ Saahasam Swaasaga Saagipo Full Video Songs ｜ NagaChaitanya, Manjima",
     "artist": "Unknown",
     "filename": "Vellipomaake Full Video Song ｜ Saahasam Swaasaga Saagipo Full Video Songs ｜ NagaChaitanya, Manjima.mp3",
     "duration": 319.8
   },
   {
-    "id": 51,
+    "id": 99,
     "title": "Panjaa Item Song Telugu - Pawan Kalyan, Anjali Lavania",
     "artist": "Veyira Cheyyi Veyira Telugu Song Lyrics",
     "filename": "Veyira Cheyyi Veyira Telugu Song Lyrics - Panjaa Item Song Telugu - Pawan Kalyan, Anjali Lavania.mp3",
     "duration": 289.28
   },
   {
-    "id": 52,
+    "id": 100,
     "title": "Pathikichu Lyric ｜ Ajith Kumar ｜ Trisha ｜ Magizh Thirumeni ｜ Anirudh ｜ Subaskaran",
     "artist": "Vidaamuyarchi",
     "filename": "Vidaamuyarchi - Pathikichu Lyric ｜ Ajith Kumar ｜ Trisha ｜ Magizh Thirumeni ｜ Anirudh ｜ Subaskaran.mp3",
     "duration": 212.76
   },
   {
-    "id": 53,
+    "id": 101,
     "title": "Breathe (Lyrics)(Olly Alexander)",
     "artist": "Years And Years",
     "filename": "Years And Years - Breathe (Lyrics)(Olly Alexander).mp3",
     "duration": 233.064
   },
   {
-    "id": 54,
+    "id": 102,
     "title": "Let Me (Official Video)",
     "artist": "ZAYN",
     "filename": "ZAYN - Let Me (Official Video).mp3",
     "duration": 249.96
   },
   {
-    "id": 55,
+    "id": 103,
     "title": "PILLOWTALK (Official Video)",
     "artist": "ZAYN",
     "filename": "ZAYN - PILLOWTALK (Official Video).mp3",
     "duration": 206.62857142857143
   },
   {
-    "id": 56,
+    "id": 104,
+    "title": "365 (Official)",
+    "artist": "Zedd, Katy Perry",
+    "filename": "Zedd, Katy Perry - 365 (Official).mp3",
+    "duration": 263.352
+  },
+  {
+    "id": 105,
     "title": "[MV] IU(아이유) _ BBIBBI(삐삐)",
     "artist": "Unknown",
     "filename": "[MV] IU(아이유) _ BBIBBI(삐삐).mp3",
     "duration": 208.40489795918367
   },
   {
-    "id": 57,
+    "id": 106,
     "title": "Igloo",
     "artist": "[Take#B ｜ 4K]  KISS OF LIFE (키스오브라이프)",
     "filename": "[Take#B ｜ 4K]  KISS OF LIFE (키스오브라이프) - Igloo.mp3",
     "duration": 145.656
+  },
+  {
+    "id": 107,
+    "title": "Prardhana shakthi with lyrics",
+    "artist": "ప్రార్థన శక్తి నాకు కావాలయ్యా by Bro. Bharat Mandru garu｜ OFFICIAL",
+    "filename": "ప్రార్థన శక్తి నాకు కావాలయ్యా by Bro. Bharat Mandru garu｜ OFFICIAL -  Prardhana shakthi with lyrics.mp3",
+    "duration": 385.344
+  },
+  {
+    "id": 108,
+    "title": "＂Sheila Ki Jawani＂ Full Song ｜ Tees Maar Khan ｜ Katrina Kaif ｜ Vishal Dadlani, Sunidhi Chauhan",
+    "artist": "Unknown",
+    "filename": "＂Sheila Ki Jawani＂ Full Song ｜ Tees Maar Khan ｜ Katrina Kaif ｜ Vishal Dadlani, Sunidhi Chauhan.mp3",
+    "duration": 270.12
   }
 ]

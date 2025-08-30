@@ -1,257 +1,466 @@
-// server.js
-// Node.js + Express + Socket.io backend for synchronized playback, playlist, and downloads
-
-const express = require('express'); // Web server [7]
-const path = require('path'); // Built-in
-const fs = require('fs'); // Built-in
-const { spawn } = require('child_process'); // Built-in
+const express = require('express');
 const http = require('http');
+const socketIo = require('socket.io');
+const path = require('path');
+const fs = require('fs');
+
 const app = express();
 const server = http.createServer(app);
-const { Server } = require('socket.io');
-// Socket.IO v4 server for real-time sync [8]
-const io = new Server(server, {
-  cors: { origin: true },
-  pingInterval: 25000,
-  pingTimeout: 20000
-});
+const io = socketIo(server);
 
-const PUBLIC_DIR = path.join(__dirname, 'public');
-const SONGS_DIR = path.join(PUBLIC_DIR, 'songs');
-const SONGS_JSON = path.join(__dirname, 'songs.json');
-
-// Serve static assets and MP3s efficiently with express.static
-// Express handles byte-range requests enabling seeking and streaming support [7][10]
-app.use(express.static(PUBLIC_DIR, {
-  fallthrough: true,
-  setHeaders: (res, filePath) => {
-    if (filePath.endsWith('.mp3')) {
-      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
-    }
-  }
-}));
-
+// Serve static files
+app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 
-// In-memory global playback state maintained by the server as the source of truth.
-// Clients request sync and adopt this state (with serverTime compensation).
-let state = {
-  playlist: [], // array of {id,title,artist,filename,duration}
-  currentIndex: 0,
-  isPlaying: false,
-  // The last known position in seconds when 'startedAt' was set
-  positionSec: 0,
-  // Unix ms timestamp on the server when playback started/resumed for drift compensation
-  startedAt: 0,
-  // Increment to invalidate stale client actions if needed
-  version: 0
-};
+// Room management
+const rooms = new Map(); // roomId -> { users: Map, host: userId, playlist: [], state: {} }
 
-// Active downloads map: downloadId -> { title, status, progress, error }
-const downloads = new Map();
-
-// Utility to load songs.json
-function loadPlaylist() {
-  try {
-    const data = fs.readFileSync(SONGS_JSON, 'utf-8');
-    state.playlist = JSON.parse(data);
-  } catch (e) {
-    console.warn('songs.json not found or invalid, initializing empty playlist');
-    state.playlist = [];
-  }
+// Default playlist state
+function createDefaultState() {
+    return {
+        playlist: [],
+        currentIndex: 0,
+        isPlaying: false,
+        positionSec: 0,
+        startedAt: null,
+        volume: 1
+    };
 }
 
-// Write helper to broadcast state to all clients
-function broadcastState() {
-  io.emit('sync:state', {
-    state,
-    serverTime: Date.now()
-  });
-}
-
-// Calculate current playback position based on server time to keep clients in sync
-function getCurrentPositionSec() {
-  if (!state.isPlaying) return state.positionSec;
-  const elapsed = (Date.now() - state.startedAt) / 1000;
-  return state.positionSec + Math.max(0, elapsed);
-}
-
-// Advance to next track
-function nextTrack() {
-  if (state.playlist.length === 0) return;
-  state.currentIndex = (state.currentIndex + 1) % state.playlist.length;
-  state.positionSec = 0;
-  state.startedAt = Date.now();
-  state.isPlaying = true;
-  state.version++;
-  broadcastState();
-}
-
-// Previous track (restart if >3s in)
-function prevTrack() {
-  if (state.playlist.length === 0) return;
-  const pos = getCurrentPositionSec();
-  if (pos > 3) {
-    state.positionSec = 0;
-    state.startedAt = Date.now();
-    state.version++;
-  } else {
-    state.currentIndex = (state.currentIndex - 1 + state.playlist.length) % state.playlist.length;
-    state.positionSec = 0;
-    state.startedAt = Date.now();
-    state.isPlaying = true;
-    state.version++;
-  }
-  broadcastState();
-}
-
-// REST: get current playlist
-app.get('/api/playlist', (req, res) => {
-  res.json({ playlist: state.playlist });
-});
-
-// REST: trigger playlist regeneration (scan songs dir)
-app.post('/api/playlist/refresh', (req, res) => {
-  // Run the Python script to regenerate songs.json
-  const py = spawn('python3', [path.join(__dirname, 'generate_playlist.py')], { cwd: __dirname });
-  let stderr = '';
-  py.stderr.on('data', d => stderr += d.toString());
-  py.on('close', code => {
-    if (code !== 0) {
-      return res.status(500).json({ ok: false, error: 'Playlist generation failed', stderr });
-    }
-    loadPlaylist();
-    state.version++;
-    broadcastState();
-    return res.json({ ok: true, count: state.playlist.length });
-  });
-});
-
-// REST: start a yt-dlp download given a query or URL
-app.post('/api/download', (req, res) => {
-  const { query } = req.body || {};
-  if (!query || typeof query !== 'string' || query.trim().length === 0) {
-    return res.status(400).json({ ok: false, error: 'Query or URL is required' });
-  }
-
-  const downloadId = 'dl_' + Math.random().toString(36).slice(2);
-  const proc = spawn(path.join(__dirname, 'download_song.sh'), [query], {
-    cwd: __dirname,
-    env: process.env
-  });
-
-  downloads.set(downloadId, { title: query, status: 'running', progress: 0, error: null });
-  io.emit('download:update', { id: downloadId, status: 'running', progress: 0, title: query });
-
-  let stderr = '';
-  proc.stdout.on('data', chunk => {
-    const line = chunk.toString();
-    // Naive progress parse for yt-dlp "[download]  42.3% ..."; robust enough for UI [9][11]
-    const m = line.match(/\[download\]\s+(\d+(?:\.\d+)?)%/i);
-    if (m) {
-      const p = Math.max(0, Math.min(100, parseFloat(m[1])));
-      const d = downloads.get(downloadId);
-      if (d) {
-        d.progress = p;
-        io.emit('download:update', { id: downloadId, status: 'running', progress: p, title: query });
-      }
-    }
-  });
-  proc.stderr.on('data', chunk => {
-    stderr += chunk.toString();
-  });
-  proc.on('close', code => {
-    const d = downloads.get(downloadId);
-    if (code === 0) {
-      if (d) {
-        d.status = 'completed';
-        d.progress = 100;
-      }
-      // Regenerate playlist and notify clients
-      const py = spawn('python3', [path.join(__dirname, 'generate_playlist.py')], { cwd: __dirname });
-      py.on('close', c2 => {
-        loadPlaylist();
-        state.version++;
-        io.emit('download:update', { id: downloadId, status: 'completed', progress: 100, title: query });
-        broadcastState();
-      });
-    } else {
-      if (d) {
-        d.status = 'failed';
-        d.error = stderr || 'Unknown error';
-      }
-      io.emit('download:update', { id: downloadId, status: 'failed', progress: 0, title: query, error: d?.error });
-    }
-  });
-
-  res.json({ ok: true, id: downloadId });
-});
-
-// Socket.io real-time synchronization
+// Socket.IO connection handling
 io.on('connection', (socket) => {
-  // Send initial state with server time for drift correction on the client [8]
-  socket.emit('sync:state', { state, serverTime: Date.now() });
-
-  // Live user count
-  io.emit('presence:count', { count: io.engine.clientsCount });
-
-  socket.on('disconnect', () => {
-    io.emit('presence:count', { count: io.engine.clientsCount });
-  });
-
-  // Control events: only the server mutates the state; clients broadcast intents.
-  socket.on('control:play', () => {
-    if (state.playlist.length === 0) return;
-    if (!state.isPlaying) {
-      state.isPlaying = true;
-      state.startedAt = Date.now();
-      state.version++;
-      broadcastState();
-    }
-  });
-
-  socket.on('control:pause', () => {
-    if (state.isPlaying) {
-      state.positionSec = getCurrentPositionSec();
-      state.isPlaying = false;
-      state.startedAt = 0;
-      state.version++;
-      broadcastState();
-    }
-  });
-
-  socket.on('control:seek', (posSec) => {
-    if (typeof posSec !== 'number' || !isFinite(posSec)) return;
-    state.positionSec = Math.max(0, posSec);
-    if (state.isPlaying) state.startedAt = Date.now();
-    state.version++;
-    broadcastState();
-  });
-
-  socket.on('control:next', () => nextTrack());
-  socket.on('control:prev', () => prevTrack());
-
-  socket.on('control:playIndex', (index) => {
-    if (typeof index !== 'number' || !isFinite(index)) return;
-    if (index < 0 || index >= state.playlist.length) return;
-    state.currentIndex = index;
-    state.positionSec = 0;
-    state.isPlaying = true;
-    state.startedAt = Date.now();
-    state.version++;
-    broadcastState();
-  });
-
-  // Client indicates a track ended locally -> server advances canonically
-  socket.on('player:ended', () => {
-    nextTrack();
-  });
+    console.log(`User connected: ${socket.id}`);
+    
+    // Room creation
+    socket.on('room:create', async ({ roomId, displayName }) => {
+        console.log(`Creating room: ${roomId} by ${displayName}`);
+        
+        // Check if room already exists
+        if (rooms.has(roomId)) {
+            socket.emit('room:error', { message: 'Room already exists. Please try a different code.' });
+            return;
+        }
+        
+        // Create new room
+        const room = {
+            id: roomId,
+            host: socket.id,
+            hostName: displayName,
+            users: new Map([[socket.id, { displayName, isHost: true }]]),
+            playlist: [],
+            state: createDefaultState()
+        };
+        
+        // Load playlist for the room
+        try {
+            const songsJsonPath = path.join(__dirname, 'songs.json');
+            let playlist = [];
+            
+            if (fs.existsSync(songsJsonPath)) {
+                const songsData = fs.readFileSync(songsJsonPath, 'utf8');
+                playlist = JSON.parse(songsData);
+                console.log(`Loaded ${playlist.length} songs from songs.json`);
+            } else {
+                // Read from directory
+                const songsDir = path.join(__dirname, 'public', 'songs');
+                if (fs.existsSync(songsDir)) {
+                    const files = fs.readdirSync(songsDir).filter(file =>
+                        file.toLowerCase().endsWith('.mp3') || 
+                        file.toLowerCase().endsWith('.wav') || 
+                        file.toLowerCase().endsWith('.ogg') ||
+                        file.toLowerCase().endsWith('.m4a')
+                    );
+                    
+                    playlist = files.map(file => {
+                        const nameWithoutExt = file.replace(/\.[^/.]+$/, "");
+                        const parts = nameWithoutExt.split(' - ');
+                        
+                        return {
+                            title: parts.length > 1 ? parts[1] : nameWithoutExt,
+                            artist: parts.length > 1 ? parts[0] : "Unknown Artist",
+                            duration: null,
+                            filename: file
+                        };
+                    });
+                    console.log(`Found ${playlist.length} songs in directory`);
+                }
+            }
+            
+            room.state.playlist = playlist;
+            
+        } catch (error) {
+            console.error('Error loading playlist for room:', error);
+        }
+        
+        rooms.set(roomId, room);
+        socket.join(roomId);
+        socket.roomId = roomId;
+        socket.displayName = displayName;
+        
+        console.log(`Room ${roomId} created successfully with ${room.state.playlist.length} songs`);
+        
+        socket.emit('room:created', {
+            roomId: roomId,
+            hostName: displayName,
+            isHost: true
+        });
+        
+        // Send initial state
+        socket.emit('sync:state', {
+            state: room.state,
+            serverTime: Date.now()
+        });
+        
+        // Update room presence
+        io.to(roomId).emit('room:presence', { count: room.users.size });
+    });
+    
+    // Room joining
+    socket.on('room:join', ({ roomId, displayName }) => {
+        console.log(`${displayName} trying to join room: ${roomId}`);
+        
+        const room = rooms.get(roomId);
+        if (!room) {
+            socket.emit('room:error', { message: 'Room not found. Please check the room code.' });
+            return;
+        }
+        
+        // Add user to room
+        room.users.set(socket.id, { displayName, isHost: false });
+        socket.join(roomId);
+        socket.roomId = roomId;
+        socket.displayName = displayName;
+        
+        console.log(`${displayName} joined room ${roomId} successfully`);
+        
+        socket.emit('room:joined', {
+            roomId: roomId,
+            hostName: room.hostName,
+            isHost: false
+        });
+        
+        // Notify other users in room
+        socket.to(roomId).emit('room:userJoined', { displayName });
+        
+        // Send current room state
+        socket.emit('sync:state', {
+            state: room.state,
+            serverTime: Date.now()
+        });
+        
+        // Update room presence for all users
+        io.to(roomId).emit('room:presence', { count: room.users.size });
+    });
+    
+    // Room rejoin (for reconnections)
+    socket.on('room:rejoin', ({ roomId, displayName }) => {
+        const room = rooms.get(roomId);
+        if (!room) {
+            socket.emit('room:error', { message: 'Room no longer exists' });
+            return;
+        }
+        
+        // Re-add user to room
+        room.users.set(socket.id, { 
+            displayName, 
+            isHost: room.host === socket.id 
+        });
+        socket.join(roomId);
+        socket.roomId = roomId;
+        socket.displayName = displayName;
+        
+        // Send current state
+        socket.emit('sync:state', {
+            state: room.state,
+            serverTime: Date.now()
+        });
+        
+        io.to(roomId).emit('room:presence', { count: room.users.size });
+    });
+    
+    // Music control events (only for room members)
+    socket.on('control:play', () => {
+        if (!socket.roomId) return;
+        
+        const room = rooms.get(socket.roomId);
+        if (!room) return;
+        
+        // Only host can control (remove this check if you want all users to control)
+        if (room.host !== socket.id) return;
+        
+        room.state.isPlaying = true;
+        room.state.startedAt = Date.now();
+        
+        // Broadcast to all users in room
+        io.to(socket.roomId).emit('sync:state', {
+            state: room.state,
+            serverTime: Date.now()
+        });
+    });
+    
+    socket.on('control:pause', () => {
+        if (!socket.roomId) return;
+        
+        const room = rooms.get(socket.roomId);
+        if (!room) return;
+        
+        // Only host can control
+        if (room.host !== socket.id) return;
+        
+        room.state.isPlaying = false;
+        room.state.startedAt = null;
+        
+        io.to(socket.roomId).emit('sync:state', {
+            state: room.state,
+            serverTime: Date.now()
+        });
+    });
+    
+    socket.on('control:next', () => {
+        if (!socket.roomId) return;
+        
+        const room = rooms.get(socket.roomId);
+        if (!room || room.state.playlist.length === 0) return;
+        
+        if (room.host !== socket.id) return;
+        
+        room.state.currentIndex = (room.state.currentIndex + 1) % room.state.playlist.length;
+        room.state.positionSec = 0;
+        room.state.startedAt = room.state.isPlaying ? Date.now() : null;
+        
+        io.to(socket.roomId).emit('sync:state', {
+            state: room.state,
+            serverTime: Date.now()
+        });
+    });
+    
+    socket.on('control:prev', () => {
+        if (!socket.roomId) return;
+        
+        const room = rooms.get(socket.roomId);
+        if (!room || room.state.playlist.length === 0) return;
+        
+        if (room.host !== socket.id) return;
+        
+        room.state.currentIndex = room.state.currentIndex > 0 
+            ? room.state.currentIndex - 1 
+            : room.state.playlist.length - 1;
+        room.state.positionSec = 0;
+        room.state.startedAt = room.state.isPlaying ? Date.now() : null;
+        
+        io.to(socket.roomId).emit('sync:state', {
+            state: room.state,
+            serverTime: Date.now()
+        });
+    });
+    
+    socket.on('control:seek', (position) => {
+        if (!socket.roomId) return;
+        
+        const room = rooms.get(socket.roomId);
+        if (!room) return;
+        
+        if (room.host !== socket.id) return;
+        
+        room.state.positionSec = position;
+        room.state.startedAt = room.state.isPlaying ? Date.now() : null;
+        
+        io.to(socket.roomId).emit('sync:state', {
+            state: room.state,
+            serverTime: Date.now()
+        });
+    });
+    
+    socket.on('control:playIndex', (index) => {
+        if (!socket.roomId) return;
+        
+        const room = rooms.get(socket.roomId);
+        if (!room || !room.state.playlist[index]) return;
+        
+        if (room.host !== socket.id) return;
+        
+        room.state.currentIndex = index;
+        room.state.positionSec = 0;
+        room.state.isPlaying = true;
+        room.state.startedAt = Date.now();
+        
+        io.to(socket.roomId).emit('sync:state', {
+            state: room.state,
+            serverTime: Date.now()
+        });
+    });
+    
+    socket.on('player:ended', () => {
+        if (!socket.roomId) return;
+        
+        const room = rooms.get(socket.roomId);
+        if (!room) return;
+        
+        // Auto-advance to next song
+        if (room.state.currentIndex < room.state.playlist.length - 1) {
+            room.state.currentIndex++;
+            room.state.positionSec = 0;
+            room.state.startedAt = Date.now();
+            
+            io.to(socket.roomId).emit('sync:state', {
+                state: room.state,
+                serverTime: Date.now()
+            });
+        } else {
+            // End of playlist
+            room.state.isPlaying = false;
+            room.state.startedAt = null;
+            
+            io.to(socket.roomId).emit('sync:state', {
+                state: room.state,
+                serverTime: Date.now()
+            });
+        }
+    });
+    
+    // Handle disconnection
+    socket.on('disconnect', () => {
+        console.log(`User disconnected: ${socket.id}`);
+        
+        if (socket.roomId) {
+            const room = rooms.get(socket.roomId);
+            if (room) {
+                const user = room.users.get(socket.id);
+                room.users.delete(socket.id);
+                
+                if (user) {
+                    console.log(`${user.displayName} left room ${socket.roomId}`);
+                    socket.to(socket.roomId).emit('room:userLeft', { 
+                        displayName: user.displayName 
+                    });
+                }
+                
+                // Update room presence
+                io.to(socket.roomId).emit('room:presence', { count: room.users.size });
+                
+                // Clean up empty rooms
+                if (room.users.size === 0) {
+                    console.log(`Room ${socket.roomId} is empty, cleaning up`);
+                    rooms.delete(socket.roomId);
+                } else if (room.host === socket.id) {
+                    // Transfer host to another user
+                    const newHostId = Array.from(room.users.keys())[0];
+                    room.host = newHostId;
+                    room.users.get(newHostId).isHost = true;
+                    console.log(`Host transferred to ${room.users.get(newHostId).displayName}`);
+                }
+            }
+        }
+    });
 });
 
-loadPlaylist();
+// API Routes
+app.get('/api/playlist', (req, res) => {
+    try {
+        // First try to read from songs.json if it exists
+        const songsJsonPath = path.join(__dirname, 'songs.json');
+        if (fs.existsSync(songsJsonPath)) {
+            const songsData = fs.readFileSync(songsJsonPath, 'utf8');
+            const playlist = JSON.parse(songsData);
+            res.json({ playlist });
+            return;
+        }
+        
+        // Fallback: read directory contents
+        const songsDir = path.join(__dirname, 'public', 'songs');
+        if (!fs.existsSync(songsDir)) {
+            res.json({ playlist: [] });
+            return;
+        }
+        
+        const files = fs.readdirSync(songsDir).filter(file =>
+            file.toLowerCase().endsWith('.mp3') || 
+            file.toLowerCase().endsWith('.wav') || 
+            file.toLowerCase().endsWith('.ogg') ||
+            file.toLowerCase().endsWith('.m4a')
+        );
+        
+        const playlist = files.map((file, index) => {
+            // Try to parse filename for title/artist
+            const nameWithoutExt = file.replace(/\.[^/.]+$/, "");
+            const parts = nameWithoutExt.split(' - ');
+            
+            return {
+                title: parts.length > 1 ? parts[1] : nameWithoutExt,
+                artist: parts.length > 1 ? parts[0] : "Unknown Artist",
+                duration: null, // Will be detected by audio element
+                filename: file
+            };
+        });
+        
+        console.log(`Found ${playlist.length} songs in directory`);
+        res.json({ playlist });
+        
+    } catch (error) {
+        console.error('Error reading playlist:', error);
+        res.status(500).json({ error: 'Failed to load playlist' });
+    }
+});
 
+app.post('/api/playlist/refresh', (req, res) => {
+    res.json({ ok: true });
+});
+
+app.post('/api/download', (req, res) => {
+    const { query } = req.body;
+    console.log(`Download requested: ${query}`);
+    res.json({ ok: true });
+});
+
+// Serve songs with range support for seeking
+app.get('/songs/:filename', (req, res) => {
+    const filename = req.params.filename;
+    const filePath = path.join(__dirname, 'public', 'songs', filename);
+    
+    console.log(`Serving song: ${filePath}`);
+    
+    if (fs.existsSync(filePath)) {
+        const stat = fs.statSync(filePath);
+        const fileSize = stat.size;
+        const range = req.headers.range;
+        
+        if (range) {
+            // Handle range requests for audio seeking
+            const parts = range.replace(/bytes=/, "").split("-");
+            const start = parseInt(parts[0], 10);
+            const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+            const chunksize = (end - start) + 1;
+            const file = fs.createReadStream(filePath, { start, end });
+            
+            res.writeHead(206, {
+                'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+                'Accept-Ranges': 'bytes',
+                'Content-Length': chunksize,
+                'Content-Type': 'audio/mpeg',
+                'Cache-Control': 'public, max-age=3600'
+            });
+            file.pipe(res);
+        } else {
+            // Full file request
+            res.writeHead(200, {
+                'Content-Length': fileSize,
+                'Content-Type': 'audio/mpeg',
+                'Accept-Ranges': 'bytes',
+                'Cache-Control': 'public, max-age=3600'
+            });
+            fs.createReadStream(filePath).pipe(res);
+        }
+    } else {
+        console.log(`File not found: ${filePath}`);
+        res.status(404).json({ error: 'Song not found' });
+    }
+});
+
+// Start server
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-  console.log(`Server listening on http://localhost:${PORT}`);
+    console.log(`🎵 InSync server running on port ${PORT}`);
+    console.log(`📱 Open http://localhost:${PORT} in your browser`);
+    console.log(`🎶 Songs directory: ${path.join(__dirname, 'public', 'songs')}`);
 });
 

@@ -461,11 +461,13 @@ document.getElementById('mainSearchInput').addEventListener('keydown', function(
 });
 // Using lyrics API for dynamic fetching
 
-// Multi-API Lyrics Fetcher with Fallbacks
+// Enhanced karaoke with proper fixes
 let karaokeInterval;
 let isKaraokeActive = false;
+let syncedLyrics = [];
+let audioElement;
 
-// Smart name cleaning functions
+// Keep your existing clean functions
 function cleanSongName(name) {
     return name
         .replace(/\([^)]*\)/g, '')
@@ -484,144 +486,99 @@ function cleanArtistName(name) {
         .trim();
 }
 
-// Combined API fetcher with multiple fallbacks
+// Fixed API fetcher (your working version)
 async function fetchLyrics(artist, song) {
     const cleanArtist = cleanArtistName(artist);
     const cleanSong = cleanSongName(song);
     
     console.log(`🎵 Searching for: "${cleanSong}" by "${cleanArtist}"`);
     
-    // Array of API functions to try in order
     const apiAttempts = [
-        // API 1: Lyrics.ovh with CORS proxy
+        // API 1: LRC format
+        async () => {
+            const response = await fetch(`https://lrclib.net/api/search?artist_name=${encodeURIComponent(cleanArtist)}&track_name=${encodeURIComponent(cleanSong)}`);
+            if (response.ok) {
+                const data = await response.json();
+                if (data && data.length > 0 && data[0].syncedLyrics) {
+                    return { type: 'lrc', content: data[0].syncedLyrics };
+                }
+            }
+            throw new Error('LRCLib failed');
+        },
+        
+        // API 2: Your working APIs
         async () => {
             const response = await fetch(`https://corsproxy.io/?https://api.lyrics.ovh/v1/${encodeURIComponent(cleanArtist)}/${encodeURIComponent(cleanSong)}`);
             if (response.ok) {
                 const data = await response.json();
                 if (data.lyrics && data.lyrics.trim()) {
-                    return data.lyrics;
+                    return { type: 'plain', content: data.lyrics };
                 }
             }
             throw new Error('Lyrics.ovh failed');
-        },
-        
-        // API 2: Alternative CORS proxy for Lyrics.ovh
-        async () => {
-            const response = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(`https://api.lyrics.ovh/v1/${cleanArtist}/${cleanSong}`)}`);
-            if (response.ok) {
-                const data = await response.json();
-                const lyricsData = JSON.parse(data.contents);
-                if (lyricsData.lyrics && lyricsData.lyrics.trim()) {
-                    return lyricsData.lyrics;
-                }
-            }
-            throw new Error('AllOrigins proxy failed');
-        },
-        
-        // API 3: Happi.dev (requires demo key)
-        async () => {
-            const searchResponse = await fetch(`https://api.happi.dev/v1/music?q=${encodeURIComponent(cleanArtist + ' ' + cleanSong)}&limit=1&apikey=DEMO`);
-            if (searchResponse.ok) {
-                const searchData = await searchResponse.json();
-                if (searchData.success && searchData.result && searchData.result.length > 0) {
-                    // This would require additional API calls to get actual lyrics
-                    return `Found on Happi.dev: ${searchData.result[0].track} by ${searchData.result[0].artist}`;
-                }
-            }
-            throw new Error('Happi.dev failed');
-        },
-        
-        // API 4: Lyrist alternative
-        async () => {
-            const response = await fetch(`https://lyrist.vercel.app/api/${encodeURIComponent(cleanArtist)}/${encodeURIComponent(cleanSong)}`);
-            if (response.ok) {
-                const data = await response.json();
-                if (data.lyrics && data.lyrics.trim()) {
-                    return data.lyrics;
-                }
-            }
-            throw new Error('Lyrist failed');
-        },
-        
-        // API 5: Some Random API
-        async () => {
-            const response = await fetch(`https://some-random-api.ml/lyrics?title=${encodeURIComponent(cleanSong)}&artist=${encodeURIComponent(cleanArtist)}`);
-            if (response.ok) {
-                const data = await response.json();
-                if (data.lyrics && data.lyrics.trim()) {
-                    return data.lyrics;
-                }
-            }
-            throw new Error('Some Random API failed');
         }
     ];
     
-    // Try each API with timeout
+    // Try each API
     for (let i = 0; i < apiAttempts.length; i++) {
         try {
             console.log(`📡 Trying API ${i + 1}...`);
             
-            // Add timeout to each API call
             const timeoutPromise = new Promise((_, reject) =>
                 setTimeout(() => reject(new Error('API timeout')), 5000)
             );
             
-            const lyrics = await Promise.race([apiAttempts[i](), timeoutPromise]);
+            const result = await Promise.race([apiAttempts[i](), timeoutPromise]);
             
-            if (lyrics && lyrics.trim()) {
-                console.log(`✅ Success with API ${i + 1}!`);
-                return lyrics;
+            if (result && result.content && result.content.trim()) {
+                console.log(`✅ Success with API ${i + 1}! Type: ${result.type}`);
+                return result;
             }
         } catch (error) {
             console.log(`❌ API ${i + 1} failed:`, error.message);
-            // Continue to next API
         }
     }
     
-    // If all APIs fail, return demo lyrics
     console.log('🎭 All APIs failed, using demo lyrics');
-    return createDemoLyrics(cleanArtist, cleanSong);
+    return { type: 'plain', content: createDemoLyrics(cleanArtist, cleanSong) };
 }
 
-// Create demo lyrics when APIs fail
-function createDemoLyrics(artist, song) {
-    return `🎵 "${song}" by ${artist} 🎵
-
-[Verse 1]
-This is your karaoke moment
-The beat is pumping, lights are bright
-Every word becomes a memory
-Sing with all your heart tonight
-
-[Chorus]
-Live the music, feel the rhythm
-Let your voice fill up the room
-This is more than just a song
-This is where your dreams can bloom
-
-[Verse 2]
-When real lyrics aren't available
-We create this special space
-For you to shine and show your talent
-Put a smile upon your face
-
-[Bridge]
-🎤 Karaoke time is here 🎤
-🎵 Let the music take control 🎵
-🎶 Every note and every beat 🎶
-🎵 Touches deep within your soul 🎵
-
-[Outro]
-Keep singing, keep believing
-The stage is yours to own
-🎤 This is your moment to shine! 🎤`;
+// Parse LRC format
+function parseLrcLyrics(lrcContent) {
+    const lines = lrcContent.split('\n');
+    const lyrics = [];
+    
+    for (const line of lines) {
+        if (line.trim() === '') continue;
+        
+        const match = line.match(/^\[(\d{2}):(\d{2})(?:\.(\d{2}))?\](.*)$/);
+        if (match) {
+            const minutes = parseInt(match[1]);
+            const seconds = parseInt(match[2]);
+            const centiseconds = parseInt(match[3] || '0');
+            const text = match[4].trim();
+            
+            const timestamp = (minutes * 60 + seconds) * 1000 + centiseconds * 10;
+            
+            if (text) {
+                lyrics.push({
+                    timestamp: timestamp,
+                    text: text
+                });
+            }
+        }
+    }
+    
+    lyrics.sort((a, b) => a.timestamp - b.timestamp);
+    console.log(`📝 Parsed ${lyrics.length} synced lyric lines`);
+    return lyrics;
 }
 
-// Display lyrics with enhanced formatting
-function displayKaraokeLyrics(lyricsText) {
+// Display lyrics WITHOUT interfering with audio
+function displaySyncedLyrics(lyricsResult) {
     const lyricsDisplay = document.getElementById('lyricsDisplay');
     
-    if (!lyricsText) {
+    if (!lyricsResult || !lyricsResult.content) {
         lyricsDisplay.innerHTML = `
             <div class="lyrics-error">
                 <i class="fa-solid fa-exclamation-triangle"></i>
@@ -631,72 +588,108 @@ function displayKaraokeLyrics(lyricsText) {
         return;
     }
     
-    // Split lyrics into lines and filter empty lines
+    if (lyricsResult.type === 'lrc') {
+        syncedLyrics = parseLrcLyrics(lyricsResult.content);
+        
+        if (syncedLyrics.length > 0) {
+            const lyricsHTML = syncedLyrics.map((lyric, index) => 
+                `<p data-line="${index}" data-timestamp="${lyric.timestamp}" class="lyric-line">${lyric.text}</p>`
+            ).join('');
+            
+            lyricsDisplay.innerHTML = lyricsHTML;
+            startSmoothSyncedKaraoke();
+            return;
+        }
+    }
+    
+    // Fallback to plain text
+    displayPlainTextLyrics(lyricsResult.content);
+}
+
+// FIXED: Smooth synced karaoke without audio interference
+function startSmoothSyncedKaraoke() {
+    audioElement = document.getElementById('audio');
+    
+    if (!audioElement) {
+        console.error('Audio element not found');
+        displayPlainTextLyrics('Audio not available - using auto-scroll');
+        return;
+    }
+    
+    console.log('🎤 Starting smooth synced karaoke');
+    
+    // Clear any existing interval
+    if (karaokeInterval) {
+        clearInterval(karaokeInterval);
+    }
+    
+    // SMOOTH sync without interfering with audio - reduced frequency
+    karaokeInterval = setInterval(() => {
+        // Only check if audio is playing
+        if (!audioElement || audioElement.paused) return;
+        
+        const currentTime = audioElement.currentTime * 1000;
+        const lines = document.querySelectorAll('#lyricsDisplay .lyric-line');
+        
+        // Find current lyric (efficient search)
+        let currentIndex = -1;
+        for (let i = syncedLyrics.length - 1; i >= 0; i--) {
+            if (currentTime >= syncedLyrics[i].timestamp) {
+                currentIndex = i;
+                break;
+            }
+        }
+        
+        // Only update if different from current highlight
+        const currentHighlight = document.querySelector('.lyric-highlight');
+        const newHighlight = currentIndex >= 0 ? lines[currentIndex] : null;
+        
+        if (currentHighlight !== newHighlight) {
+            // Remove all highlights
+            lines.forEach(line => line.classList.remove('lyric-highlight'));
+            
+            // Add new highlight
+            if (newHighlight) {
+                newHighlight.classList.add('lyric-highlight');
+                newHighlight.scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'center' 
+                });
+            }
+        }
+        
+    }, 100); // Check every 100ms instead of 16ms - much smoother for audio
+    
+    console.log('✅ Smooth synced karaoke started');
+}
+
+// Plain text display (fallback)
+function displayPlainTextLyrics(lyricsText) {
+    const lyricsDisplay = document.getElementById('lyricsDisplay');
     const lines = lyricsText.split('\n').filter(line => line.trim() !== '');
     
-    // Create HTML for lyrics with special formatting
     const lyricsHTML = lines.map((line, index) => {
         let className = 'lyric-line';
-        
-        // Special styling for different parts
         if (line.includes('[') && line.includes(']')) {
             className += ' lyric-section';
         }
-        if (line.includes('🎵') || line.includes('🎤') || line.includes('🎶')) {
-            className += ' lyric-emoji';
-        }
-        
         return `<p data-line="${index}" class="${className}">${line.trim()}</p>`;
     }).join('');
     
     lyricsDisplay.innerHTML = lyricsHTML;
-    
-    // Start auto-highlighting lyrics
-    startLyricsHighlight();
+    startPlainTextKaraoke();
 }
 
-// Enhanced CSS for better lyric formatting
-const additionalCSS = `
-.lyric-line {
-    margin: 12px 0;
-    padding: 16px 20px;
-    background: rgba(99, 102, 241, 0.08);
-    border-radius: 12px;
-    border-left: 4px solid var(--muted);
-    transition: all 0.4s var(--ease);
-    opacity: 0.7;
-}
-
-.lyric-section {
-    background: rgba(255, 107, 107, 0.1) !important;
-    border-left-color: #ff6b6b !important;
-    font-weight: 600;
-}
-
-.lyric-emoji {
-    background: linear-gradient(135deg, rgba(255, 107, 107, 0.15), rgba(124, 58, 237, 0.15)) !important;
-    border-left-color: var(--accent) !important;
-    font-size: 1.1em;
-}
-`;
-
-// Add enhanced CSS
-const styleSheet = document.createElement('style');
-styleSheet.textContent = additionalCSS;
-document.head.appendChild(styleSheet);
-
-// Auto-highlight lyrics with smooth scrolling
-function startLyricsHighlight() {
+// Auto-scroll for plain text
+function startPlainTextKaraoke() {
     const lines = document.querySelectorAll('#lyricsDisplay .lyric-line');
     let currentLine = 0;
     
     if (lines.length === 0) return;
     
     karaokeInterval = setInterval(() => {
-        // Remove previous highlights
         lines.forEach(line => line.classList.remove('lyric-highlight'));
         
-        // Highlight current line
         if (lines[currentLine]) {
             lines[currentLine].classList.add('lyric-highlight');
             lines[currentLine].scrollIntoView({ 
@@ -706,21 +699,50 @@ function startLyricsHighlight() {
         }
         
         currentLine++;
-        
-        // Stop when all lines are done
         if (currentLine >= lines.length) {
             clearInterval(karaokeInterval);
-            setTimeout(() => {
-                if (lines[lines.length - 1]) {
-                    lines[lines.length - 1].classList.remove('lyric-highlight');
-                }
-            }, 3000);
         }
-    }, 2800); // Slightly slower for better readability
+    }, 2800);
 }
 
-// Start karaoke with enhanced feedback
-document.getElementById('btnKaraoke').addEventListener('click', async function() {
+// FIXED: Karaoke start with proper event listeners
+document.addEventListener('DOMContentLoaded', function() {
+    // Start karaoke button
+    const startBtn = document.getElementById('btnKaraoke');
+    if (startBtn) {
+        startBtn.addEventListener('click', startKaraoke);
+    }
+    
+    // FIXED: Close button event listener
+    const stopBtn = document.getElementById('btnStopKaraoke');
+    if (stopBtn) {
+        stopBtn.addEventListener('click', stopKaraoke);
+    }
+    
+    // FIXED: Auto-detect song changes
+    const heroTitle = document.getElementById('heroTitle');
+    if (heroTitle) {
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.type === 'childList' || mutation.type === 'characterData') {
+                    console.log('🔄 Song changed, stopping karaoke');
+                    if (isKaraokeActive) {
+                        stopKaraoke();
+                    }
+                }
+            });
+        });
+        
+        observer.observe(heroTitle, { 
+            childList: true, 
+            characterData: true, 
+            subtree: true 
+        });
+    }
+});
+
+// Start karaoke function
+async function startKaraoke() {
     if (isKaraokeActive) return;
     
     const currentSong = document.getElementById('heroTitle').textContent;
@@ -731,7 +753,6 @@ document.getElementById('btnKaraoke').addEventListener('click', async function()
         return;
     }
     
-    // Show karaoke section with enhanced loading
     const karaokeSection = document.getElementById('karaokeSection');
     karaokeSection.style.display = 'block';
     
@@ -739,50 +760,42 @@ document.getElementById('btnKaraoke').addEventListener('click', async function()
     lyricsDisplay.innerHTML = `
         <div class="loading-lyrics">
             <i class="fa-solid fa-spinner fa-spin"></i>
-            <p>🎵 Searching multiple lyrics databases...</p>
-            <small>Looking for: "${cleanSongName(currentSong)}" by ${cleanArtistName(currentArtist)}</small>
-            <div style="margin-top: 12px; font-size: 12px; color: var(--subtext);">
-                Trying: Lyrics.ovh → Happi.dev → Alternative APIs...
-            </div>
+            <p>🎵 Loading lyrics...</p>
+            <small>"${cleanSongName(currentSong)}" by ${cleanArtistName(currentArtist)}</small>
         </div>
     `;
     
-    // Update button state
-    this.innerHTML = '<i class="fa-solid fa-hourglass-half"></i> Searching...';
-    this.disabled = true;
+    const startBtn = document.getElementById('btnKaraoke');
+    startBtn.innerHTML = '<i class="fa-solid fa-hourglass-half"></i> Loading...';
+    startBtn.disabled = true;
     isKaraokeActive = true;
     
     // Fetch and display lyrics
-    const lyrics = await fetchLyrics(currentArtist, currentSong);
+    const lyricsResult = await fetchLyrics(currentArtist, currentSong);
     
-    // Update button
-    this.innerHTML = '<i class="fa-solid fa-microphone"></i> 🎤 Karaoke Active';
-    this.disabled = false;
+    startBtn.innerHTML = '<i class="fa-solid fa-microphone"></i> 🎤 Karaoke Active';
+    startBtn.disabled = false;
     
-    // Display lyrics
-    displayKaraokeLyrics(lyrics);
-});
+    displaySyncedLyrics(lyricsResult);
+}
 
-// Stop karaoke mode
-document.getElementById('btnStopKaraoke').addEventListener('click', function() {
-    stopKaraoke();
-});
-
-// Enhanced stop function
+// FIXED: Stop karaoke function
 function stopKaraoke() {
+    console.log('🛑 Stopping karaoke');
+    
     const karaokeSection = document.getElementById('karaokeSection');
     const karaokeBtn = document.getElementById('btnKaraoke');
     
-    // Hide karaoke section with fade effect
-    karaokeSection.style.opacity = '0';
-    setTimeout(() => {
+    // Hide section
+    if (karaokeSection) {
         karaokeSection.style.display = 'none';
-        karaokeSection.style.opacity = '1';
-    }, 300);
+    }
     
     // Reset button
-    karaokeBtn.innerHTML = '<i class="fa-solid fa-microphone"></i> Start Karaoke';
-    karaokeBtn.disabled = false;
+    if (karaokeBtn) {
+        karaokeBtn.innerHTML = '<i class="fa-solid fa-microphone"></i> Start Karaoke';
+        karaokeBtn.disabled = false;
+    }
     
     // Clear interval
     if (karaokeInterval) {
@@ -790,29 +803,31 @@ function stopKaraoke() {
         karaokeInterval = null;
     }
     
+    // Reset variables
     isKaraokeActive = false;
-    console.log('🎤 Karaoke stopped');
+    syncedLyrics = [];
+    
+    console.log('✅ Karaoke stopped');
 }
 
-// Auto-stop karaoke when song changes
-const observer = new MutationObserver(function(mutations) {
-    mutations.forEach(function(mutation) {
-        if (mutation.target.id === 'heroTitle' && isKaraokeActive) {
-            console.log('🔄 Song changed, stopping karaoke');
-            stopKaraoke();
-        }
-    });
-});
+// Demo lyrics
+function createDemoLyrics(artist, song) {
+    return `🎵 "${song}" by ${artist} 🎵
 
-// Start observing
-observer.observe(document.getElementById('heroTitle'), { 
-    childList: true, 
-    characterData: true, 
-    subtree: true 
-});
+[Verse 1]
+This is your karaoke moment
+Sing along with the beat
+Every word becomes a memory
+Make this song complete
 
-console.log('🎵 Multi-API Karaoke system loaded!');
+[Chorus]
+Live the music, feel the rhythm
+Let your voice fill up the room
+This is more than just a song
+This is where your dreams can bloom
 
+🎤 Enjoy the karaoke experience! 🎤`;
+}
 
 
 

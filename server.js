@@ -456,6 +456,280 @@ app.get('/songs/:filename', (req, res) => {
     }
 });
 
+// Admin dashboard route
+app.get('/admin', (req, res) => {
+    res.send(`
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InSync Admin Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Inter', Arial, sans-serif; 
+            background: #0f0f0f; 
+            color: #fff; 
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .header { 
+            text-align: center; 
+            margin-bottom: 30px; 
+        }
+        .header h1 { 
+            color: #3b82f6; 
+            font-size: 2rem; 
+            margin-bottom: 10px;
+        }
+        .stats { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+            gap: 20px; 
+            margin-bottom: 30px;
+        }
+        .stat-card { 
+            background: #1a1a1a; 
+            border: 1px solid #333; 
+            border-radius: 8px; 
+            padding: 20px; 
+            text-align: center;
+        }
+        .stat-number { 
+            font-size: 2rem; 
+            font-weight: bold; 
+            color: #3b82f6; 
+        }
+        .stat-label { 
+            color: #999; 
+            margin-top: 5px;
+        }
+        .rooms-container { 
+            display: grid; 
+            gap: 20px;
+        }
+        .room-card { 
+            background: #1a1a1a; 
+            border: 1px solid #333; 
+            border-radius: 12px; 
+            padding: 20px; 
+            position: relative;
+        }
+        .room-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        .room-id { 
+            font-size: 1.5rem; 
+            font-weight: bold; 
+            color: #3b82f6;
+        }
+        .room-host { 
+            background: #10b981; 
+            color: white; 
+            padding: 4px 12px; 
+            border-radius: 20px; 
+            font-size: 0.9rem;
+        }
+        .users-list { 
+            display: flex; 
+            flex-wrap: wrap; 
+            gap: 8px; 
+            margin-bottom: 15px;
+        }
+        .user-tag { 
+            background: #374151; 
+            padding: 4px 12px; 
+            border-radius: 16px; 
+            font-size: 0.9rem;
+        }
+        .now-playing { 
+            background: #292929; 
+            border-left: 4px solid #3b82f6; 
+            padding: 15px; 
+            border-radius: 0 8px 8px 0; 
+        }
+        .song-title { 
+            font-weight: bold; 
+            margin-bottom: 5px;
+        }
+        .song-artist { 
+            color: #999;
+        }
+        .playback-status { 
+            display: flex; 
+            align-items: center; 
+            gap: 10px; 
+            margin-top: 10px;
+        }
+        .status-playing { 
+            color: #10b981; 
+        }
+        .status-paused { 
+            color: #f59e0b; 
+        }
+        .empty-state { 
+            text-align: center; 
+            color: #666; 
+            padding: 40px; 
+            font-style: italic;
+        }
+        .refresh-btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin-bottom: 20px;
+        }
+        .refresh-btn:hover {
+            background: #2563eb;
+        }
+        @media (max-width: 768px) {
+            .room-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+            .stats { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎵 InSync Admin Dashboard</h1>
+        <button class="refresh-btn" onclick="location.reload()">🔄 Refresh</button>
+    </div>
+    
+    <div class="stats">
+        <div class="stat-card">
+            <div class="stat-number" id="totalRooms">0</div>
+            <div class="stat-label">Active Rooms</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="totalUsers">0</div>
+            <div class="stat-label">Connected Users</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="playingRooms">0</div>
+            <div class="stat-label">Rooms Playing</div>
+        </div>
+    </div>
+
+    <div class="rooms-container" id="roomsContainer">
+        <div class="empty-state">Loading rooms...</div>
+    </div>
+
+    <script>
+        async function loadDashboard() {
+            try {
+                const response = await fetch('/admin/data');
+                const data = await response.json();
+                
+                // Update stats
+                document.getElementById('totalRooms').textContent = data.totalRooms;
+                document.getElementById('totalUsers').textContent = data.totalUsers;
+                document.getElementById('playingRooms').textContent = data.playingRooms;
+                
+                // Update rooms
+                const container = document.getElementById('roomsContainer');
+                
+                if (data.rooms.length === 0) {
+                    container.innerHTML = '<div class="empty-state">No active rooms</div>';
+                    return;
+                }
+                
+                container.innerHTML = data.rooms.map(room => \`
+                    <div class="room-card">
+                        <div class="room-header">
+                            <div class="room-id">Room: \${room.id}</div>
+                            <div class="room-host">👑 \${room.hostName}</div>
+                        </div>
+                        
+                        <div class="users-list">
+                            \${room.users.map(user => \`
+                                <span class="user-tag">\${user.displayName}\${user.isHost ? ' 👑' : ''}</span>
+                            \`).join('')}
+                        </div>
+                        
+                        \${room.currentSong ? \`
+                            <div class="now-playing">
+                                <div class="song-title">🎵 \${room.currentSong.title}</div>
+                                <div class="song-artist">by \${room.currentSong.artist}</div>
+                                <div class="playback-status">
+                                    <span class="\${room.isPlaying ? 'status-playing' : 'status-paused'}">
+                                        \${room.isPlaying ? '▶️ Playing' : '⏸️ Paused'}
+                                    </span>
+                                    <span>|\${room.currentIndex + 1}/\${room.playlistLength}</span>
+                                </div>
+                            </div>
+                        \` : \`
+                            <div class="now-playing">
+                                <div class="song-title">No song selected</div>
+                                <div class="song-artist">Playlist: \${room.playlistLength} songs</div>
+                            </div>
+                        \`}
+                    </div>
+                \`).join('');
+                
+            } catch (error) {
+                console.error('Failed to load dashboard:', error);
+                document.getElementById('roomsContainer').innerHTML = 
+                    '<div class="empty-state">Error loading data</div>';
+            }
+        }
+        
+        // Load initially
+        loadDashboard();
+        
+        // Auto-refresh every 3 seconds
+        setInterval(loadDashboard, 3000);
+    </script>
+</body>
+</html>
+    `);
+});
+
+// Admin data API
+app.get('/admin/data', (req, res) => {
+    try {
+        const roomsData = [];
+        let totalUsers = 0;
+        let playingRooms = 0;
+        
+        rooms.forEach((room, roomId) => {
+            totalUsers += room.users.size;
+            if (room.state.isPlaying) playingRooms++;
+            
+            const currentSong = room.state.playlist[room.state.currentIndex];
+            
+            roomsData.push({
+                id: roomId,
+                hostName: room.hostName,
+                users: Array.from(room.users.values()),
+                currentSong: currentSong || null,
+                isPlaying: room.state.isPlaying,
+                currentIndex: room.state.currentIndex,
+                playlistLength: room.state.playlist.length
+            });
+        });
+        
+        res.json({
+            totalRooms: rooms.size,
+            totalUsers: totalUsers,
+            playingRooms: playingRooms,
+            rooms: roomsData
+        });
+    } catch (error) {
+        console.error('Admin data error:', error);
+        res.status(500).json({ error: 'Failed to get admin data' });
+    }
+});
+
+
+
 // Start server
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {

@@ -179,145 +179,117 @@ io.on('connection', (socket) => {
     });
     
     // Music control events (only for room members)
-    socket.on('control:play', () => {
-        if (!socket.roomId) return;
-        
-        const room = rooms.get(socket.roomId);
-        if (!room) return;
-        
-        // Only host can control (remove this check if you want all users to control)
-        if (room.host !== socket.id) return;
-        
-        room.state.isPlaying = true;
-        room.state.startedAt = Date.now();
-        
-        // Broadcast to all users in room
-        io.to(socket.roomId).emit('sync:state', {
-            state: room.state,
-            serverTime: Date.now()
-        });
-    });
     
-    socket.on('control:pause', () => {
-        if (!socket.roomId) return;
-        
-        const room = rooms.get(socket.roomId);
-        if (!room) return;
-        
-        // Only host can control
-        if (room.host !== socket.id) return;
-        
-        room.state.isPlaying = false;
-        room.state.startedAt = null;
-        
-        io.to(socket.roomId).emit('sync:state', {
-            state: room.state,
-            serverTime: Date.now()
-        });
-    });
+	// Music control events - ALL USERS CAN CONTROL
+socket.on('control:play', () => {
+    if (!socket.roomId) return;
     
-    socket.on('control:next', () => {
-        if (!socket.roomId) return;
-        
-        const room = rooms.get(socket.roomId);
-        if (!room || room.state.playlist.length === 0) return;
-        
-        if (room.host !== socket.id) return;
-        
-        room.state.currentIndex = (room.state.currentIndex + 1) % room.state.playlist.length;
-        room.state.positionSec = 0;
-        room.state.startedAt = room.state.isPlaying ? Date.now() : null;
-        
-        io.to(socket.roomId).emit('sync:state', {
-            state: room.state,
-            serverTime: Date.now()
-        });
-    });
+    const room = rooms.get(socket.roomId);
+    if (!room) return;
     
-    socket.on('control:prev', () => {
-        if (!socket.roomId) return;
-        
-        const room = rooms.get(socket.roomId);
-        if (!room || room.state.playlist.length === 0) return;
-        
-        if (room.host !== socket.id) return;
-        
-        room.state.currentIndex = room.state.currentIndex > 0 
-            ? room.state.currentIndex - 1 
-            : room.state.playlist.length - 1;
-        room.state.positionSec = 0;
-        room.state.startedAt = room.state.isPlaying ? Date.now() : null;
-        
-        io.to(socket.roomId).emit('sync:state', {
-            state: room.state,
-            serverTime: Date.now()
-        });
-    });
+    room.state.isPlaying = true;
+    room.state.startedAt = Date.now();
     
-    socket.on('control:seek', (position) => {
-        if (!socket.roomId) return;
-        
-        const room = rooms.get(socket.roomId);
-        if (!room) return;
-        
-        if (room.host !== socket.id) return;
-        
-        room.state.positionSec = position;
-        room.state.startedAt = room.state.isPlaying ? Date.now() : null;
-        
-        io.to(socket.roomId).emit('sync:state', {
-            state: room.state,
-            serverTime: Date.now()
-        });
-    });
+    console.log(`${socket.displayName} started playback in room ${socket.roomId}`);
     
-    socket.on('control:playIndex', (index) => {
-        if (!socket.roomId) return;
-        
-        const room = rooms.get(socket.roomId);
-        if (!room || !room.state.playlist[index]) return;
-        
-        if (room.host !== socket.id) return;
-        
-        room.state.currentIndex = index;
-        room.state.positionSec = 0;
-        room.state.isPlaying = true;
-        room.state.startedAt = Date.now();
-        
-        io.to(socket.roomId).emit('sync:state', {
-            state: room.state,
-            serverTime: Date.now()
-        });
+    io.to(socket.roomId).emit('sync:state', {
+        state: room.state,
+        serverTime: Date.now()
     });
+});
+
+socket.on('control:pause', () => {
+    if (!socket.roomId) return;
     
-    socket.on('player:ended', () => {
-        if (!socket.roomId) return;
-        
-        const room = rooms.get(socket.roomId);
-        if (!room) return;
-        
-        // Auto-advance to next song
-        if (room.state.currentIndex < room.state.playlist.length - 1) {
-            room.state.currentIndex++;
-            room.state.positionSec = 0;
-            room.state.startedAt = Date.now();
-            
-            io.to(socket.roomId).emit('sync:state', {
-                state: room.state,
-                serverTime: Date.now()
-            });
-        } else {
-            // End of playlist
-            room.state.isPlaying = false;
-            room.state.startedAt = null;
-            
-            io.to(socket.roomId).emit('sync:state', {
-                state: room.state,
-                serverTime: Date.now()
-            });
-        }
+    const room = rooms.get(socket.roomId);
+    if (!room) return;
+    
+    room.state.isPlaying = false;
+    room.state.startedAt = null;
+    
+    console.log(`${socket.displayName} paused playback in room ${socket.roomId}`);
+    
+    io.to(socket.roomId).emit('sync:state', {
+        state: room.state,
+        serverTime: Date.now()
     });
+});
+
+socket.on('control:next', () => {
+    if (!socket.roomId) return;
     
+    const room = rooms.get(socket.roomId);
+    if (!room || room.state.playlist.length === 0) return;
+    
+    room.state.currentIndex = (room.state.currentIndex + 1) % room.state.playlist.length;
+    room.state.positionSec = 0;
+    room.state.startedAt = room.state.isPlaying ? Date.now() : null;
+    
+    console.log(`${socket.displayName} skipped to next song in room ${socket.roomId}`);
+    
+    io.to(socket.roomId).emit('sync:state', {
+        state: room.state,
+        serverTime: Date.now()
+    });
+});
+
+socket.on('control:prev', () => {
+    if (!socket.roomId) return;
+    
+    const room = rooms.get(socket.roomId);
+    if (!room || room.state.playlist.length === 0) return;
+    
+    room.state.currentIndex = room.state.currentIndex > 0 
+        ? room.state.currentIndex - 1 
+        : room.state.playlist.length - 1;
+    room.state.positionSec = 0;
+    room.state.startedAt = room.state.isPlaying ? Date.now() : null;
+    
+    console.log(`${socket.displayName} went to previous song in room ${socket.roomId}`);
+    
+    io.to(socket.roomId).emit('sync:state', {
+        state: room.state,
+        serverTime: Date.now()
+    });
+});
+
+socket.on('control:seek', (position) => {
+    if (!socket.roomId) return;
+    
+    const room = rooms.get(socket.roomId);
+    if (!room) return;
+    
+    room.state.positionSec = position;
+    room.state.startedAt = room.state.isPlaying ? Date.now() : null;
+    
+    console.log(`${socket.displayName} seeked to ${position}s in room ${socket.roomId}`);
+    
+    io.to(socket.roomId).emit('sync:state', {
+        state: room.state,
+        serverTime: Date.now()
+    });
+});
+
+socket.on('control:playIndex', (index) => {
+    if (!socket.roomId) return;
+    
+    const room = rooms.get(socket.roomId);
+    if (!room || !room.state.playlist[index]) return;
+    
+    const song = room.state.playlist[index];
+    room.state.currentIndex = index;
+    room.state.positionSec = 0;
+    room.state.isPlaying = true;
+    room.state.startedAt = Date.now();
+    
+    console.log(`${socket.displayName} selected "${song.title}" in room ${socket.roomId}`);
+    
+    io.to(socket.roomId).emit('sync:state', {
+        state: room.state,
+        serverTime: Date.now()
+    });
+});
+
     // Handle disconnection
     socket.on('disconnect', () => {
         console.log(`User disconnected: ${socket.id}`);

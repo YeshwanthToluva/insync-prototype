@@ -3,6 +3,7 @@ const http = require('http');
 const socketIo = require('socket.io');
 const path = require('path');
 const fs = require('fs');
+const { spawn } = require('child_process'); // Add this import
 
 const app = express();
 const server = http.createServer(app);
@@ -26,6 +27,9 @@ function createDefaultState() {
         volume: 1
     };
 }
+
+// Download progress tracking
+const downloads = new Map(); // downloadId -> { query, status, progress }
 
 // Socket.IO connection handling
 io.on('connection', (socket) => {
@@ -178,117 +182,143 @@ io.on('connection', (socket) => {
         io.to(roomId).emit('room:presence', { count: room.users.size });
     });
     
-    // Music control events (only for room members)
-    
-	// Music control events - ALL USERS CAN CONTROL
-socket.on('control:play', () => {
-    if (!socket.roomId) return;
-    
-    const room = rooms.get(socket.roomId);
-    if (!room) return;
-    
-    room.state.isPlaying = true;
-    room.state.startedAt = Date.now();
-    
-    console.log(`${socket.displayName} started playback in room ${socket.roomId}`);
-    
-    io.to(socket.roomId).emit('sync:state', {
-        state: room.state,
-        serverTime: Date.now()
+    // Music control events - ALL USERS CAN CONTROL
+    socket.on('control:play', () => {
+        if (!socket.roomId) return;
+        
+        const room = rooms.get(socket.roomId);
+        if (!room) return;
+        
+        room.state.isPlaying = true;
+        room.state.startedAt = Date.now();
+        
+        console.log(`${socket.displayName} started playback in room ${socket.roomId}`);
+        
+        io.to(socket.roomId).emit('sync:state', {
+            state: room.state,
+            serverTime: Date.now()
+        });
     });
-});
 
-socket.on('control:pause', () => {
-    if (!socket.roomId) return;
-    
-    const room = rooms.get(socket.roomId);
-    if (!room) return;
-    
-    room.state.isPlaying = false;
-    room.state.startedAt = null;
-    
-    console.log(`${socket.displayName} paused playback in room ${socket.roomId}`);
-    
-    io.to(socket.roomId).emit('sync:state', {
-        state: room.state,
-        serverTime: Date.now()
+    socket.on('control:pause', () => {
+        if (!socket.roomId) return;
+        
+        const room = rooms.get(socket.roomId);
+        if (!room) return;
+        
+        room.state.isPlaying = false;
+        room.state.startedAt = null;
+        
+        console.log(`${socket.displayName} paused playback in room ${socket.roomId}`);
+        
+        io.to(socket.roomId).emit('sync:state', {
+            state: room.state,
+            serverTime: Date.now()
+        });
     });
-});
 
-socket.on('control:next', () => {
-    if (!socket.roomId) return;
-    
-    const room = rooms.get(socket.roomId);
-    if (!room || room.state.playlist.length === 0) return;
-    
-    room.state.currentIndex = (room.state.currentIndex + 1) % room.state.playlist.length;
-    room.state.positionSec = 0;
-    room.state.startedAt = room.state.isPlaying ? Date.now() : null;
-    
-    console.log(`${socket.displayName} skipped to next song in room ${socket.roomId}`);
-    
-    io.to(socket.roomId).emit('sync:state', {
-        state: room.state,
-        serverTime: Date.now()
+    socket.on('control:next', () => {
+        if (!socket.roomId) return;
+        
+        const room = rooms.get(socket.roomId);
+        if (!room || room.state.playlist.length === 0) return;
+        
+        room.state.currentIndex = (room.state.currentIndex + 1) % room.state.playlist.length;
+        room.state.positionSec = 0;
+        room.state.startedAt = room.state.isPlaying ? Date.now() : null;
+        
+        console.log(`${socket.displayName} skipped to next song in room ${socket.roomId}`);
+        
+        io.to(socket.roomId).emit('sync:state', {
+            state: room.state,
+            serverTime: Date.now()
+        });
     });
-});
 
-socket.on('control:prev', () => {
-    if (!socket.roomId) return;
-    
-    const room = rooms.get(socket.roomId);
-    if (!room || room.state.playlist.length === 0) return;
-    
-    room.state.currentIndex = room.state.currentIndex > 0 
-        ? room.state.currentIndex - 1 
-        : room.state.playlist.length - 1;
-    room.state.positionSec = 0;
-    room.state.startedAt = room.state.isPlaying ? Date.now() : null;
-    
-    console.log(`${socket.displayName} went to previous song in room ${socket.roomId}`);
-    
-    io.to(socket.roomId).emit('sync:state', {
-        state: room.state,
-        serverTime: Date.now()
+    socket.on('control:prev', () => {
+        if (!socket.roomId) return;
+        
+        const room = rooms.get(socket.roomId);
+        if (!room || room.state.playlist.length === 0) return;
+        
+        room.state.currentIndex = room.state.currentIndex > 0 
+            ? room.state.currentIndex - 1 
+            : room.state.playlist.length - 1;
+        room.state.positionSec = 0;
+        room.state.startedAt = room.state.isPlaying ? Date.now() : null;
+        
+        console.log(`${socket.displayName} went to previous song in room ${socket.roomId}`);
+        
+        io.to(socket.roomId).emit('sync:state', {
+            state: room.state,
+            serverTime: Date.now()
+        });
     });
-});
 
-socket.on('control:seek', (position) => {
-    if (!socket.roomId) return;
-    
-    const room = rooms.get(socket.roomId);
-    if (!room) return;
-    
-    room.state.positionSec = position;
-    room.state.startedAt = room.state.isPlaying ? Date.now() : null;
-    
-    console.log(`${socket.displayName} seeked to ${position}s in room ${socket.roomId}`);
-    
-    io.to(socket.roomId).emit('sync:state', {
-        state: room.state,
-        serverTime: Date.now()
+    socket.on('control:seek', (position) => {
+        if (!socket.roomId) return;
+        
+        const room = rooms.get(socket.roomId);
+        if (!room) return;
+        
+        room.state.positionSec = position;
+        room.state.startedAt = room.state.isPlaying ? Date.now() : null;
+        
+        console.log(`${socket.displayName} seeked to ${position}s in room ${socket.roomId}`);
+        
+        io.to(socket.roomId).emit('sync:state', {
+            state: room.state,
+            serverTime: Date.now()
+        });
     });
-});
 
-socket.on('control:playIndex', (index) => {
-    if (!socket.roomId) return;
-    
-    const room = rooms.get(socket.roomId);
-    if (!room || !room.state.playlist[index]) return;
-    
-    const song = room.state.playlist[index];
-    room.state.currentIndex = index;
-    room.state.positionSec = 0;
-    room.state.isPlaying = true;
-    room.state.startedAt = Date.now();
-    
-    console.log(`${socket.displayName} selected "${song.title}" in room ${socket.roomId}`);
-    
-    io.to(socket.roomId).emit('sync:state', {
-        state: room.state,
-        serverTime: Date.now()
+    socket.on('control:playIndex', (index) => {
+        if (!socket.roomId) return;
+        
+        const room = rooms.get(socket.roomId);
+        if (!room || !room.state.playlist[index]) return;
+        
+        const song = room.state.playlist[index];
+        room.state.currentIndex = index;
+        room.state.positionSec = 0;
+        room.state.isPlaying = true;
+        room.state.startedAt = Date.now();
+        
+        console.log(`${socket.displayName} selected "${song.title}" in room ${socket.roomId}`);
+        
+        io.to(socket.roomId).emit('sync:state', {
+            state: room.state,
+            serverTime: Date.now()
+        });
     });
-});
+
+    socket.on('player:ended', () => {
+        if (!socket.roomId) return;
+        
+        const room = rooms.get(socket.roomId);
+        if (!room) return;
+        
+        // Auto-advance to next song
+        if (room.state.currentIndex < room.state.playlist.length - 1) {
+            room.state.currentIndex++;
+            room.state.positionSec = 0;
+            room.state.startedAt = Date.now();
+            
+            io.to(socket.roomId).emit('sync:state', {
+                state: room.state,
+                serverTime: Date.now()
+            });
+        } else {
+            // End of playlist
+            room.state.isPlaying = false;
+            room.state.startedAt = null;
+            
+            io.to(socket.roomId).emit('sync:state', {
+                state: room.state,
+                serverTime: Date.now()
+            });
+        }
+    });
 
     // Handle disconnection
     socket.on('disconnect', () => {
@@ -374,15 +404,284 @@ app.get('/api/playlist', (req, res) => {
     }
 });
 
+// Update playlist refresh to refresh all rooms
 app.post('/api/playlist/refresh', (req, res) => {
+    console.log('Refreshing playlists for all rooms...');
+    
+    // Update all existing rooms with new playlist
+    rooms.forEach((room, roomId) => {
+        try {
+            const songsJsonPath = path.join(__dirname, 'songs.json');
+            let playlist = [];
+            
+            if (fs.existsSync(songsJsonPath)) {
+                const songsData = fs.readFileSync(songsJsonPath, 'utf8');
+                playlist = JSON.parse(songsData);
+            } else {
+                const songsDir = path.join(__dirname, 'public', 'songs');
+                if (fs.existsSync(songsDir)) {
+                    const files = fs.readdirSync(songsDir).filter(file =>
+                        file.toLowerCase().endsWith('.mp3') || 
+                        file.toLowerCase().endsWith('.wav') || 
+                        file.toLowerCase().endsWith('.ogg') ||
+                        file.toLowerCase().endsWith('.m4a')
+                    );
+                    
+                    playlist = files.map(file => {
+                        const nameWithoutExt = file.replace(/\.[^/.]+$/, "");
+                        const parts = nameWithoutExt.split(' - ');
+                        
+                        return {
+                            title: parts.length > 1 ? parts[1] : nameWithoutExt,
+                            artist: parts.length > 1 ? parts[0] : "Unknown Artist",
+                            duration: null,
+                            filename: file
+                        };
+                    });
+                }
+            }
+            
+            // Preserve current playback state but update playlist
+            const oldCurrentSong = room.state.playlist[room.state.currentIndex];
+            room.state.playlist = playlist;
+            
+            // Try to maintain current song position if it still exists
+            if (oldCurrentSong) {
+                const newIndex = playlist.findIndex(song => song.filename === oldCurrentSong.filename);
+                if (newIndex >= 0) {
+                    room.state.currentIndex = newIndex;
+                } else {
+                    // Song was removed, reset to first song but don't auto-play
+                    room.state.currentIndex = 0;
+                    room.state.isPlaying = false;
+                    room.state.positionSec = 0;
+                    room.state.startedAt = null;
+                }
+            }
+            
+            // Send updated state to all users in room
+            io.to(roomId).emit('sync:state', {
+                state: room.state,
+                serverTime: Date.now()
+            });
+            
+        } catch (error) {
+            console.error(`Error refreshing playlist for room ${roomId}:`, error);
+        }
+    });
+    
     res.json({ ok: true });
 });
 
+// FIXED: Actual download implementation
 app.post('/api/download', (req, res) => {
     const { query } = req.body;
-    console.log(`Download requested: ${query}`);
-    res.json({ ok: true });
+    if (!query?.trim()) {
+        return res.status(400).json({ ok: false, error: 'Query is required' });
+    }
+
+    const downloadId = `download_${Date.now()}`;
+    console.log(`🎵 Download requested: ${query} (ID: ${downloadId})`);
+    
+    // Check if download script exists
+    const scriptPath = path.join(__dirname, 'download_song.sh');
+    if (!fs.existsSync(scriptPath)) {
+        console.error('❌ download_song.sh script not found');
+        return res.status(500).json({ ok: false, error: 'Download script not found' });
+    }
+
+    // Initialize download tracking
+    downloads.set(downloadId, {
+        id: downloadId,
+        query: query,
+        status: 'running',
+        progress: 0
+    });
+
+    // Send initial download started event
+    io.emit('download:update', {
+        id: downloadId,
+        title: query,
+        status: 'running',
+        progress: 0
+    });
+
+    // Spawn the download script
+    const downloadProcess = spawn('bash', [scriptPath, query], {
+        cwd: __dirname,
+        stdio: ['pipe', 'pipe', 'pipe']
+    });
+
+    let progressBuffer = '';
+
+    // Handle stdout for progress updates
+    downloadProcess.stdout.on('data', (data) => {
+        const output = data.toString();
+        progressBuffer += output;
+        
+        // Look for progress indicators from yt-dlp
+        const lines = progressBuffer.split('\n');
+        progressBuffer = lines.pop(); // Keep incomplete line in buffer
+        
+        for (const line of lines) {
+            console.log(`📥 Download output: ${line}`);
+            
+            // Parse yt-dlp progress (format: [download] XX.X% of YYY.YYMiB at ZZZ.ZZKiB/s ETA XX:XX)
+            const progressMatch = line.match(/\[download\]\s+(\d+(?:\.\d+)?)\%/);
+            if (progressMatch) {
+                const progress = Math.round(parseFloat(progressMatch[1]));
+                
+                downloads.set(downloadId, {
+                    ...downloads.get(downloadId),
+                    progress: progress
+                });
+                
+                io.emit('download:update', {
+                    id: downloadId,
+                    title: query,
+                    status: 'running',
+                    progress: progress
+                });
+            }
+        }
+    });
+
+    // Handle stderr
+    downloadProcess.stderr.on('data', (data) => {
+        console.log(`📥 Download stderr: ${data.toString()}`);
+    });
+
+    // Handle process completion
+    downloadProcess.on('close', (code) => {
+        if (code === 0) {
+            console.log(` Download completed successfully: ${query}`);
+            
+            downloads.set(downloadId, {
+                ...downloads.get(downloadId),
+                status: 'completed',
+                progress: 100
+            });
+            
+            io.emit('download:update', {
+                id: downloadId,
+                title: query,
+                status: 'completed',
+                progress: 100
+            });
+            
+            // Auto-refresh all room playlists after successful download
+            setTimeout(() => {
+                console.log('🔄 Auto-refreshing playlists after download...');
+                rooms.forEach((room, roomId) => {
+                    // Update playlist without changing current playback
+                    updateRoomPlaylist(room, roomId);
+                });
+            }, 1000);
+            
+        } else {
+            console.log(`❌ Download failed: ${query} (exit code: ${code})`);
+            
+            downloads.set(downloadId, {
+                ...downloads.get(downloadId),
+                status: 'failed',
+                progress: 0
+            });
+            
+            io.emit('download:update', {
+                id: downloadId,
+                title: query,
+                status: 'failed',
+                progress: 0,
+                error: `Download failed (exit code: ${code})`
+            });
+        }
+        
+        // Clean up download tracking after 30 seconds
+        setTimeout(() => {
+            downloads.delete(downloadId);
+        }, 30000);
+    });
+
+    // Handle process errors
+    downloadProcess.on('error', (error) => {
+        console.error(`💥 Download process error: ${error.message}`);
+        
+        downloads.set(downloadId, {
+            ...downloads.get(downloadId),
+            status: 'failed',
+            progress: 0
+        });
+        
+        io.emit('download:update', {
+            id: downloadId,
+            title: query,
+            status: 'failed',
+            progress: 0,
+            error: error.message
+        });
+    });
+
+    res.json({ ok: true, downloadId: downloadId });
 });
+
+// Helper function to update room playlist without disrupting playback
+function updateRoomPlaylist(room, roomId) {
+    try {
+        const songsJsonPath = path.join(__dirname, 'songs.json');
+        let playlist = [];
+        
+        if (fs.existsSync(songsJsonPath)) {
+            const songsData = fs.readFileSync(songsJsonPath, 'utf8');
+            playlist = JSON.parse(songsData);
+        } else {
+            const songsDir = path.join(__dirname, 'public', 'songs');
+            if (fs.existsSync(songsDir)) {
+                const files = fs.readdirSync(songsDir).filter(file =>
+                    file.toLowerCase().endsWith('.mp3') || 
+                    file.toLowerCase().endsWith('.wav') || 
+                    file.toLowerCase().endsWith('.ogg') ||
+                    file.toLowerCase().endsWith('.m4a')
+                );
+                
+                playlist = files.map(file => {
+                    const nameWithoutExt = file.replace(/\.[^/.]+$/, "");
+                    const parts = nameWithoutExt.split(' - ');
+                    
+                    return {
+                        title: parts.length > 1 ? parts[1] : nameWithoutExt,
+                        artist: parts.length > 1 ? parts[0] : "Unknown Artist",
+                        duration: null,
+                        filename: file
+                    };
+                });
+            }
+        }
+        
+        // IMPORTANT: Only update playlist, preserve all playback state
+        const oldPlaylist = room.state.playlist;
+        room.state.playlist = playlist;
+        
+        // If currently playing song still exists, maintain its index
+        if (room.state.currentIndex < oldPlaylist.length) {
+            const currentSong = oldPlaylist[room.state.currentIndex];
+            const newIndex = playlist.findIndex(song => song.filename === currentSong.filename);
+            if (newIndex >= 0) {
+                room.state.currentIndex = newIndex;
+            }
+        }
+        
+        // Send updated state (playlist only, playback continues)
+        io.to(roomId).emit('sync:state', {
+            state: room.state,
+            serverTime: Date.now()
+        });
+        
+        console.log(`📋 Updated playlist for room ${roomId}: ${playlist.length} songs`);
+        
+    } catch (error) {
+        console.error(`Error updating playlist for room ${roomId}:`, error);
+    }
+}
 
 // Serve songs with range support for seeking
 app.get('/songs/:filename', (req, res) => {
@@ -699,8 +998,6 @@ app.get('/admin/data', (req, res) => {
         res.status(500).json({ error: 'Failed to get admin data' });
     }
 });
-
-
 
 // Start server
 const PORT = process.env.PORT || 3000;

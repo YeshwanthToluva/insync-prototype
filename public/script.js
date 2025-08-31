@@ -372,8 +372,16 @@ function setAudioSrc(song) {
   audio.src = url;
 }
 
+// Flag to prevent playlist refresh from interrupting playback
+let preventPlaylistRefresh = false;
+
 // Sync playback state from server with drift correction
 function applyState({ state, serverTime }) {
+  // Don't apply state changes if we're in the middle of a download-triggered refresh
+  if (preventPlaylistRefresh) {
+    return;
+  }
+  
   Playback.state = state;
   Playback.serverTime = serverTime;
   Playback.clientOffset = serverTime - Date.now();
@@ -601,7 +609,9 @@ function addDownloadCard({ id, title, status, progress, error }) {
     s.innerHTML = `<i class="fa-solid fa-circle-check" style="color:#22c55e"></i> Completed`;
     f.style.width = `100%`;
     e.textContent = '';
-    setTimeout(refreshPlaylist, 500);
+    // FIXED: Removed automatic playlist refresh that was causing song changes
+    // The server will handle playlist updates without interrupting current playback
+    console.log(`✅ Download completed: ${title}`);
   } else if (status === 'failed') {
     s.innerHTML = `<i class="fa-solid fa-triangle-exclamation" style="color:#ef4444"></i> Failed`;
     f.style.width = `0%`;
@@ -609,12 +619,23 @@ function addDownloadCard({ id, title, status, progress, error }) {
   }
 }
 
-// Manual refresh
+// Manual refresh (only when user explicitly clicks)
 async function refreshPlaylist() {
   try {
+    // Temporarily prevent state changes from affecting current playback
+    preventPlaylistRefresh = true;
+    
     const res = await fetch('/api/playlist/refresh', { method: 'POST' });
     const data = await res.json();
-  } catch (e) {}
+    
+    // Re-enable state changes after a brief delay
+    setTimeout(() => {
+      preventPlaylistRefresh = false;
+    }, 1000);
+    
+  } catch (e) {
+    preventPlaylistRefresh = false;
+  }
 }
 
 if (btnRefresh) {

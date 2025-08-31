@@ -737,9 +737,16 @@ async function fetchLyrics(artist, song) {
     
     console.log(`🎵 Searching for: "${cleanSong}" by "${cleanArtist}"`);
     
+    // If artist is unknown, try to guess it from the song title
+    let searchArtist = cleanArtist;
+    if (cleanArtist.toLowerCase() === 'unknown' || cleanArtist === '') {
+        searchArtist = await guessArtistFromSong(cleanSong);
+        console.log(`🔍 Guessed artist: "${searchArtist}" for song "${cleanSong}"`);
+    }
+    
     const apiAttempts = [
         async () => {
-            const response = await fetch(`https://lrclib.net/api/search?artist_name=${encodeURIComponent(cleanArtist)}&track_name=${encodeURIComponent(cleanSong)}`);
+            const response = await fetch(`https://lrclib.net/api/search?artist_name=${encodeURIComponent(searchArtist)}&track_name=${encodeURIComponent(cleanSong)}`);
             if (response.ok) {
                 const data = await response.json();
                 if (data && data.length > 0 && data[0].syncedLyrics) {
@@ -749,8 +756,20 @@ async function fetchLyrics(artist, song) {
             throw new Error('LRCLib failed');
         },
         
+        // Fallback: try searching without artist if guess fails
         async () => {
-            const response = await fetch(`https://corsproxy.io/?https://api.lyrics.ovh/v1/${encodeURIComponent(cleanArtist)}/${encodeURIComponent(cleanSong)}`);
+            const response = await fetch(`https://lrclib.net/api/search?track_name=${encodeURIComponent(cleanSong)}`);
+            if (response.ok) {
+                const data = await response.json();
+                if (data && data.length > 0 && data[0].syncedLyrics) {
+                    return { type: 'lrc', content: data[0].syncedLyrics };
+                }
+            }
+            throw new Error('LRCLib track-only search failed');
+        },
+        
+        async () => {
+            const response = await fetch(`https://corsproxy.io/?https://api.lyrics.ovh/v1/${encodeURIComponent(searchArtist)}/${encodeURIComponent(cleanSong)}`);
             if (response.ok) {
                 const data = await response.json();
                 if (data.lyrics && data.lyrics.trim()) {
@@ -783,6 +802,41 @@ async function fetchLyrics(artist, song) {
     console.log('🎭 All APIs failed, using demo lyrics');
     return { type: 'plain', content: createDemoLyrics(cleanArtist, cleanSong) };
 }
+
+// Artist guessing function using web search
+async function guessArtistFromSong(songTitle) {
+    try {
+        console.log(`🕵️ Attempting to guess artist for: "${songTitle}"`);
+        
+        // Try to search for the song using a simple web search approach
+        const searchQuery = encodeURIComponent(`"${songTitle}" song artist musician`);
+        
+        // You can use any search service here - this is a generic example
+        // Option 1: Use a lyrics API that supports track-only search
+        const response = await fetch(`https://lrclib.net/api/search?track_name=${encodeURIComponent(songTitle)}`);
+        
+        if (response.ok) {
+            const data = await response.json();
+            if (data && data.length > 0 && data[0].artistName) {
+                console.log(`🎯 Found potential artist: "${data[0].artistName}"`);
+                return data[0].artistName;
+            }
+        }
+        
+        // Option 2: If you have access to other music APIs, add them here
+        // const musicBrainzResponse = await fetch(`https://musicbrainz.org/ws/2/recording?query=${searchQuery}&fmt=json`);
+        // ... parse response
+        
+    } catch (error) {
+        console.log('🚫 Artist guessing failed:', error.message);
+    }
+    
+    // If all guessing attempts fail, return empty string to trigger track-only search
+    console.log('❓ Could not guess artist, will try track-only search');
+    return '';
+}
+
+
 
 function parseLrcLyrics(lrcContent) {
     const lines = lrcContent.split('\n');
